@@ -311,90 +311,94 @@ if not disable_breaks:
 # -------------------------
 # Charts
 # -------------------------
-st.subheader("📈 S&P 500 Index")
-fig1 = go.Figure(
-    go.Candlestick(
-        x=dff["Date"],
-        open=dff["Open"],
-        high=dff["High"],
-        low=dff["Low"],
-        close=dff["Close"],
-        increasing_line_color="#26a69a",
-        decreasing_line_color="#ef5350",
+
+# Wrap S&P 500 Index in expander
+with st.expander("📈 S&P 500 Index", expanded=True):
+    fig1 = go.Figure(
+        go.Candlestick(
+            x=dff["Date"],
+            open=dff["Open"],
+            high=dff["High"],
+            low=dff["Low"],
+            close=dff["Close"],
+            increasing_line_color="#26a69a",
+            decreasing_line_color="#ef5350",
+        )
     )
-)
-if rangebreaks:
-    fig1.update_xaxes(rangebreaks=rangebreaks)
-fig1.update_layout(
-    height=450,
-    template="plotly_dark",
-    xaxis_rangeslider_visible=False,
-    margin=dict(l=10, r=10, t=40, b=10),
-)
-st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
+    if rangebreaks:
+        fig1.update_xaxes(rangebreaks=rangebreaks)
+    fig1.update_layout(
+        height=450,
+        template="plotly_dark",
+        xaxis_rangeslider_visible=False,
+        margin=dict(l=10, r=10, t=40, b=10),
+    )
+    st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
 
 st.markdown("---")
-st.subheader("📊 Market Breadth Analysis")
-tab1, tab2 = st.tabs(["📊 Moving Averages", "📈 Percentage Distribution"])
 
-with tab1:
-    fig2 = go.Figure()
-    if dff["MA20"].notna().any():
-        fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA20"], name="MA20", line=dict(width=1.5)))
-    if dff["MA50"].notna().any():
-        fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA50"], name="MA50", line=dict(width=2)))
-    if dff["MA200"].notna().any():
-        fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA200"], name="MA200", line=dict(width=2.5)))
+# Wrap Market Breadth Analysis in expander
+with st.expander("📊 Market Breadth Analysis", expanded=True):
+    tab1, tab2 = st.tabs(["📊 Moving Averages", "📈 Percentage Distribution"])
 
-    if rangebreaks:
-        fig2.update_xaxes(rangebreaks=rangebreaks)
-    fig2.update_layout(
-        height=400,
-        template="plotly_dark",
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        margin=dict(l=10, r=10, t=40, b=10),
-    )
-    st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+    with tab1:
+        fig2 = go.Figure()
+        if dff["MA20"].notna().any():
+            fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA20"], name="MA20", line=dict(width=1.5)))
+        if dff["MA50"].notna().any():
+            fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA50"], name="MA50", line=dict(width=2)))
+        if dff["MA200"].notna().any():
+            fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA200"], name="MA200", line=dict(width=2.5)))
 
-with tab2:
-    fig3 = go.Figure()
-
-    if dff["PctAbove"].notna().any():
-        fig3.add_trace(
-            go.Scatter(
-                x=dff["Date"],
-                y=dff["PctAbove"],
-                name="% Above Both",
-                fill="tozeroy",
-                line=dict(width=1.5),
-                fillcolor="rgba(0, 255, 0, 0.2)",
-            )
+        if rangebreaks:
+            fig2.update_xaxes(rangebreaks=rangebreaks)
+        fig2.update_layout(
+            height=400,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            margin=dict(l=10, r=10, t=40, b=10),
         )
+        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
-    if dff["PctBelow"].notna().any():
-        fig3.add_trace(
-            go.Scatter(
-                x=dff["Date"],
-                y=dff["PctBelow"],
-                name="% Below Both",
-                fill="tozeroy",
-                line=dict(width=1.5),
-                fillcolor="rgba(255, 0, 0, 0.2)",
+    with tab2:
+        fig3 = go.Figure()
+
+        if dff["PctAbove"].notna().any():
+            fig3.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["PctAbove"],
+                    name="% Above Both",
+                    fill="tozeroy",
+                    line=dict(width=1.5),
+                    fillcolor="rgba(0, 255, 0, 0.2)",
+                )
             )
-        )
 
-    if rangebreaks:
-        fig3.update_xaxes(rangebreaks=rangebreaks)
-    fig3.update_layout(
-        height=400,
-        template="plotly_dark",
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        yaxis_title="Percent",
-        margin=dict(l=10, r=10, t=40, b=10),
-    )
-    st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
+        if dff["PctBelow"].notna().any():
+            fig3.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["PctBelow"],
+                    name="% Below Both",
+                    fill="tozeroy",
+                    line=dict(width=1.5),
+                    fillcolor="rgba(255, 0, 0, 0.2)",
+                )
+            )
+
+        if rangebreaks:
+            fig3.update_xaxes(rangebreaks=rangebreaks)
+        fig3.update_layout(
+            height=400,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="Percent",
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
