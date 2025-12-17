@@ -443,7 +443,7 @@ with tab3:
             go.Bar(
                 x=dff["Date"],
                 y=dff["NH20"],
-                name="NH20",
+                name="% Price above New High 20 days",  # Updated
                 marker_color="lightgreen",
             )
         )
@@ -454,7 +454,7 @@ with tab3:
             go.Bar(
                 x=dff["Date"],
                 y=dff["NL20"] * -1,
-                name="NL20",
+                name="% Price below New Low 20 days",  # Updated
                 marker_color="salmon",
             )
         )
@@ -481,7 +481,7 @@ with tab3:
             go.Bar(
                 x=dff["Date"],
                 y=dff["NH250"],
-                name="NH250",
+                name="% Price above New High 250 days",  # Updated
                 marker_color="#4FD555",
             )
         )
@@ -492,7 +492,7 @@ with tab3:
             go.Bar(
                 x=dff["Date"],
                 y=dff["NL250"] * -1,
-                name="NL250",
+                name="% Price below New Low 250 days",  # Updated
                 marker_color="#E54141",
             )
         )
