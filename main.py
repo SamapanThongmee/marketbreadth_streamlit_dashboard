@@ -339,27 +339,7 @@ st.markdown("---")
 
 # Wrap Market Breadth Analysis in expander
 with st.expander("📊 Market Breadth Analysis", expanded=True):
-    tab1, tab2 = st.tabs(["📊 Moving Averages", "📈 Percentage Distribution"])
-
-    # with tab1:
-    #     fig2 = go.Figure()
-    #     if dff["MA20"].notna().any():
-    #         fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA20"], name="MA20", line=dict(width=1.5)))
-    #     if dff["MA50"].notna().any():
-    #         fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA50"], name="MA50", line=dict(width=2)))
-    #     if dff["MA200"].notna().any():
-    #         fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA200"], name="MA200", line=dict(width=2.5)))
-
-    #     if rangebreaks:
-    #         fig2.update_xaxes(rangebreaks=rangebreaks)
-    #     fig2.update_layout(
-    #         height=400,
-    #         template="plotly_dark",
-    #         hovermode="x unified",
-    #         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-    #         margin=dict(l=10, r=10, t=40, b=10),
-    #     )
-    #     st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+    tab1, tab2 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages"])
 
     with tab1:
         fig2 = go.Figure()
@@ -368,21 +348,21 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 x=dff["Date"], 
                 y=dff["MA20"], 
                 name="MA20", 
-                line=dict(width=1.5, color="#00ff00")  # Green
+                line=dict(width=1.5, color="#26a69a")
             ))
         if dff["MA50"].notna().any():
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA50"], 
                 name="MA50", 
-                line=dict(width=2, color="#ff8c00")  # Orange
+                line=dict(width=2, color="#ff9800")
             ))
         if dff["MA200"].notna().any():
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA200"], 
                 name="MA200", 
-                line=dict(width=2.5, color="#ff0000")  # Red
+                line=dict(width=2.5, color="#ef5350")
             ))
 
         if rangebreaks:
@@ -396,9 +376,6 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
         )
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
-
-
-
     with tab2:
         fig3 = go.Figure()
 
@@ -407,10 +384,10 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Scatter(
                     x=dff["Date"],
                     y=dff["PctAbove"],
-                    name="% Above Both",
+                    name="% Price > 50-SMA and 200-SMA",
                     fill="tozeroy",
-                    line=dict(width=1.5),
-                    fillcolor="rgba(0, 255, 0, 0.2)",
+                    line=dict(width=1.5, color="#00ff00"),  # Green line
+                    fillcolor="rgba(0, 255, 0, 0.2)",  # Green fill
                 )
             )
 
@@ -419,9 +396,9 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Scatter(
                     x=dff["Date"],
                     y=dff["PctBelow"],
-                    name="% Below Both",
+                    name="% Price < 50-SMA and 200-SMA",
                     fill="tozeroy",
-                    line=dict(width=1.5),
+                    line=dict(width=1.5, color="#ff0000"),  # Red line
                     fillcolor="rgba(255, 0, 0, 0.2)",
                 )
             )
