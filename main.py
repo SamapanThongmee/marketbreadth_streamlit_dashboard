@@ -331,6 +331,7 @@ with st.expander("📈 S&P 500 Index", expanded=True):
         height=450,
         template="plotly_dark",
         xaxis_rangeslider_visible=False,
+        yaxis_title="S&P500 Index",  # Add y-axis label
         margin=dict(l=10, r=10, t=40, b=10),
     )
     st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
