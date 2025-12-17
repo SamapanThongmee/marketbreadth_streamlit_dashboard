@@ -347,21 +347,21 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA20"], 
-                name="20-SMA", 
+                name="MA20", 
                 line=dict(width=1.5, color="#26a69a")
             ))
         if dff["MA50"].notna().any():
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA50"], 
-                name="50-SMA", 
+                name="MA50", 
                 line=dict(width=2, color="#ff9800")
             ))
         if dff["MA200"].notna().any():
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA200"], 
-                name="200-SMA", 
+                name="MA200", 
                 line=dict(width=2.5, color="#ef5350")
             ))
 
@@ -372,6 +372,8 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             template="plotly_dark",
             hovermode="x unified",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="Moving Averages",  # Add y-axis label
+            yaxis=dict(range=[0, 100]),  # Set y-axis scale 0-100
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
