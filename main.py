@@ -434,11 +434,12 @@ with tab2:
     st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
 with tab3:
-    fig4 = go.Figure()
+    # Chart 1: NH20 and NL20
+    fig4a = go.Figure()
 
-    # New Highs (positive values)
+    # New Highs 20 (positive values)
     if dff["NH20"].notna().any():
-        fig4.add_trace(
+        fig4a.add_trace(
             go.Bar(
                 x=dff["Date"],
                 y=dff["NH20"],
@@ -446,9 +447,37 @@ with tab3:
                 marker_color="lightgreen",
             )
         )
+
+    # New Lows 20 (negative values)
+    if dff["NL20"].notna().any():
+        fig4a.add_trace(
+            go.Bar(
+                x=dff["Date"],
+                y=dff["NL20"] * -1,
+                name="NL20",
+                marker_color="salmon",
+            )
+        )
+
+    if rangebreaks:
+        fig4a.update_xaxes(rangebreaks=rangebreaks)
+    fig4a.update_layout(
+        height=350,
+        template="plotly_dark",
+        hovermode="x unified",
+        barmode='relative',
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        yaxis_title="New Highs & Lows (20-Day)",
+        margin=dict(l=10, r=10, t=40, b=10),
+    )
+    st.plotly_chart(fig4a, use_container_width=True, config={"displayModeBar": False})
+
+    # Chart 2: NH250 and NL250
+    fig4b = go.Figure()
     
+    # New Highs 250 (positive values)
     if dff["NH250"].notna().any():
-        fig4.add_trace(
+        fig4b.add_trace(
             go.Bar(
                 x=dff["Date"],
                 y=dff["NH250"],
@@ -457,19 +486,9 @@ with tab3:
             )
         )
 
-    # New Lows (negative values)
-    if dff["NL20"].notna().any():
-        fig4.add_trace(
-            go.Bar(
-                x=dff["Date"],
-                y=dff["NL20"] * -1,
-                name="NL20",
-                marker_color="salmon",
-            )
-        )
-    
+    # New Lows 250 (negative values)
     if dff["NL250"].notna().any():
-        fig4.add_trace(
+        fig4b.add_trace(
             go.Bar(
                 x=dff["Date"],
                 y=dff["NL250"] * -1,
@@ -479,17 +498,17 @@ with tab3:
         )
 
     if rangebreaks:
-        fig4.update_xaxes(rangebreaks=rangebreaks)
-    fig4.update_layout(
-        height=400,
+        fig4b.update_xaxes(rangebreaks=rangebreaks)
+    fig4b.update_layout(
+        height=350,
         template="plotly_dark",
         hovermode="x unified",
         barmode='relative',
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        yaxis_title="New Highs & Lows",
+        yaxis_title="New Highs & Lows (250-Day)",
         margin=dict(l=10, r=10, t=40, b=10),
     )
-    st.plotly_chart(fig4, use_container_width=True, config={"displayModeBar": False})
+    st.plotly_chart(fig4b, use_container_width=True, config={"displayModeBar": False})
 
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
