@@ -412,7 +412,8 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             template="plotly_dark",
             hovermode="x unified",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            yaxis_title="Percent",
+            yaxis_title="Double Moving Averages",  # Changed from "Percent"
+            yaxis=dict(range=[0, 100]),  # Set y-axis scale 0-100
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
