@@ -222,7 +222,8 @@ def load_sheet_df(url_primary: str, url_fallback: str) -> Tuple[pd.DataFrame, st
 # -------------------------
 # Controls
 # -------------------------
-c1, c2, c3, c4, c5 = st.columns([1.2, 1.4, 3.2, 1.8, 1.4])
+# c1, c2, c3, c4, c5 = st.columns([1.2, 1.4, 3.2, 1.8, 1.4])
+c1, c2, c3 = st.columns([1.2, 1.4, 3.2])
 
 with c1:
     if st.button("🔄 Refresh data", use_container_width=True):
@@ -232,11 +233,15 @@ with c1:
 with c2:
     months_to_show = st.selectbox("Default window", [3, 6, 12], index=1)
 
-with c4:
-    include_holidays = st.checkbox("Skip holidays (slower)", value=False)
+# Set default values
+include_holidays = False
+disable_breaks = False
 
-with c5:
-    disable_breaks = st.checkbox("Disable rangebreaks (debug)", value=False)
+# with c4:
+#     include_holidays = st.checkbox("Skip holidays (slower)", value=False)
+
+# with c5:
+#     disable_breaks = st.checkbox("Disable rangebreaks (debug)", value=False)
 
 # -------------------------
 # Load + Parse
