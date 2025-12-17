@@ -329,186 +329,187 @@ if not disable_breaks:
 # -------------------------
 # Charts
 # -------------------------
-st.subheader("📈 S&P 500 Index")
-fig1 = go.Figure(
-    go.Candlestick(
-        x=dff["Date"],
-        open=dff["Open"],
-        high=dff["High"],
-        low=dff["Low"],
-        close=dff["Close"],
-        increasing_line_color="#26a69a",
-        decreasing_line_color="#ef5350",
+with st.expander("📈 S&P 500 Index", expanded=True):
+    fig1 = go.Figure(
+        go.Candlestick(
+            x=dff["Date"],
+            open=dff["Open"],
+            high=dff["High"],
+            low=dff["Low"],
+            close=dff["Close"],
+            increasing_line_color="#26a69a",
+            decreasing_line_color="#ef5350",
+        )
     )
-)
-if rangebreaks:
-    fig1.update_xaxes(rangebreaks=rangebreaks)
-fig1.update_layout(
-    height=450,
-    template="plotly_dark",
-    xaxis_rangeslider_visible=False,
-    yaxis_title="S&P500 Index",
-    margin=dict(l=10, r=10, t=40, b=10),
-)
-st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
+    if rangebreaks:
+        fig1.update_xaxes(rangebreaks=rangebreaks)
+    fig1.update_layout(
+        height=450,
+        template="plotly_dark",
+        xaxis_rangeslider_visible=False,
+        yaxis_title="S&P500 Index",
+        margin=dict(l=10, r=10, t=40, b=10),
+    )
+    st.plotly_chart(fig1, use_container_width=True, config={"displayModeBar": False})
 
 st.markdown("---")
-st.subheader("📊 Market Breadth Analysis")
-tab1, tab2, tab3 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows"])
 
-with tab1:
-    fig2 = go.Figure()
-    if dff["MA20"].notna().any():
-        fig2.add_trace(go.Scatter(
-            x=dff["Date"], 
-            y=dff["MA20"], 
-            name="20-SMA",
-            line=dict(width=1.5, color="#26a69a")
-        ))
-    if dff["MA50"].notna().any():
-        fig2.add_trace(go.Scatter(
-            x=dff["Date"], 
-            y=dff["MA50"], 
-            name="50-SMA",
-            line=dict(width=2, color="#ff9800")
-        ))
-    if dff["MA200"].notna().any():
-        fig2.add_trace(go.Scatter(
-            x=dff["Date"], 
-            y=dff["MA200"], 
-            name="200-SMA",
-            line=dict(width=2.5, color="#ef5350")
-        ))
+with st.expander("📊 Market Breadth Analysis", expanded=True):
+    tab1, tab2, tab3 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows"])
 
-    if rangebreaks:
-        fig2.update_xaxes(rangebreaks=rangebreaks)
-    fig2.update_layout(
-        height=400,
-        template="plotly_dark",
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        yaxis_title="Moving Averages",
-        yaxis=dict(range=[0, 100]),
-        margin=dict(l=10, r=10, t=40, b=10),
-    )
-    st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+    with tab1:
+        fig2 = go.Figure()
+        if dff["MA20"].notna().any():
+            fig2.add_trace(go.Scatter(
+                x=dff["Date"], 
+                y=dff["MA20"], 
+                name="20-SMA",
+                line=dict(width=1.5, color="#26a69a")
+            ))
+        if dff["MA50"].notna().any():
+            fig2.add_trace(go.Scatter(
+                x=dff["Date"], 
+                y=dff["MA50"], 
+                name="50-SMA",
+                line=dict(width=2, color="#ff9800")
+            ))
+        if dff["MA200"].notna().any():
+            fig2.add_trace(go.Scatter(
+                x=dff["Date"], 
+                y=dff["MA200"], 
+                name="200-SMA",
+                line=dict(width=2.5, color="#ef5350")
+            ))
 
-with tab2:
-    fig3 = go.Figure()
-
-    if dff["PctAbove"].notna().any():
-        fig3.add_trace(
-            go.Scatter(
-                x=dff["Date"],
-                y=dff["PctAbove"],
-                name="% Price > 50-SMA and 200-SMA",
-                fill="tozeroy",
-                line=dict(width=1.5, color="#00ff00"),
-                fillcolor="rgba(0, 255, 0, 0.2)",
-            )
+        if rangebreaks:
+            fig2.update_xaxes(rangebreaks=rangebreaks)
+        fig2.update_layout(
+            height=400,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="Moving Averages",
+            yaxis=dict(range=[0, 100]),
+            margin=dict(l=10, r=10, t=40, b=10),
         )
+        st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
-    if dff["PctBelow"].notna().any():
-        fig3.add_trace(
-            go.Scatter(
-                x=dff["Date"],
-                y=dff["PctBelow"],
-                name="% Price < 50-SMA and 200-SMA",
-                fill="tozeroy",
-                line=dict(width=1.5, color="#ff0000"),
-                fillcolor="rgba(255, 0, 0, 0.2)",
+    with tab2:
+        fig3 = go.Figure()
+
+        if dff["PctAbove"].notna().any():
+            fig3.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["PctAbove"],
+                    name="% Price > 50-SMA and 200-SMA",
+                    fill="tozeroy",
+                    line=dict(width=1.5, color="#00ff00"),
+                    fillcolor="rgba(0, 255, 0, 0.2)",
+                )
             )
-        )
 
-    if rangebreaks:
-        fig3.update_xaxes(rangebreaks=rangebreaks)
-    fig3.update_layout(
-        height=400,
-        template="plotly_dark",
-        hovermode="x unified",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        yaxis_title="Double Moving Averages",
-        yaxis=dict(range=[0, 100]),
-        margin=dict(l=10, r=10, t=40, b=10),
-    )
-    st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
-
-with tab3:
-    # Chart 1: NH20 and NL20
-    fig4a = go.Figure()
-
-    # New Highs 20 (positive values)
-    if dff["NH20"].notna().any():
-        fig4a.add_trace(
-            go.Bar(
-                x=dff["Date"],
-                y=dff["NH20"],
-                name="% Price above New High 20 days",  # Updated
-                marker_color="lightgreen",
+        if dff["PctBelow"].notna().any():
+            fig3.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["PctBelow"],
+                    name="% Price < 50-SMA and 200-SMA",
+                    fill="tozeroy",
+                    line=dict(width=1.5, color="#ff0000"),
+                    fillcolor="rgba(255, 0, 0, 0.2)",
+                )
             )
-        )
 
-    # New Lows 20 (negative values)
-    if dff["NL20"].notna().any():
-        fig4a.add_trace(
-            go.Bar(
-                x=dff["Date"],
-                y=dff["NL20"] * -1,
-                name="% Price below New Low 20 days",  # Updated
-                marker_color="salmon",
+        if rangebreaks:
+            fig3.update_xaxes(rangebreaks=rangebreaks)
+        fig3.update_layout(
+            height=400,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="Double Moving Averages",
+            yaxis=dict(range=[0, 100]),
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
+
+    with tab3:
+        # Chart 1: NH20 and NL20
+        fig4a = go.Figure()
+
+        # New Highs 20 (positive values)
+        if dff["NH20"].notna().any():
+            fig4a.add_trace(
+                go.Bar(
+                    x=dff["Date"],
+                    y=dff["NH20"],
+                    name="% Price above New High 20 days",
+                    marker_color="lightgreen",
+                )
             )
-        )
 
-    if rangebreaks:
-        fig4a.update_xaxes(rangebreaks=rangebreaks)
-    fig4a.update_layout(
-        height=350,
-        template="plotly_dark",
-        hovermode="x unified",
-        barmode='relative',
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        yaxis_title="New Highs & Lows (20-Day)",
-        margin=dict(l=10, r=10, t=40, b=10),
-    )
-    st.plotly_chart(fig4a, use_container_width=True, config={"displayModeBar": False})
-
-    # Chart 2: NH250 and NL250
-    fig4b = go.Figure()
-    
-    # New Highs 250 (positive values)
-    if dff["NH250"].notna().any():
-        fig4b.add_trace(
-            go.Bar(
-                x=dff["Date"],
-                y=dff["NH250"],
-                name="% Price above New High 250 days",  # Updated
-                marker_color="#4FD555",
+        # New Lows 20 (negative values)
+        if dff["NL20"].notna().any():
+            fig4a.add_trace(
+                go.Bar(
+                    x=dff["Date"],
+                    y=dff["NL20"] * -1,
+                    name="% Price below New Low 20 days",
+                    marker_color="salmon",
+                )
             )
-        )
 
-    # New Lows 250 (negative values)
-    if dff["NL250"].notna().any():
-        fig4b.add_trace(
-            go.Bar(
-                x=dff["Date"],
-                y=dff["NL250"] * -1,
-                name="% Price below New Low 250 days",  # Updated
-                marker_color="#E54141",
+        if rangebreaks:
+            fig4a.update_xaxes(rangebreaks=rangebreaks)
+        fig4a.update_layout(
+            height=350,
+            template="plotly_dark",
+            hovermode="x unified",
+            barmode='relative',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="New Highs & Lows (20-Day)",
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig4a, use_container_width=True, config={"displayModeBar": False})
+
+        # Chart 2: NH250 and NL250
+        fig4b = go.Figure()
+        
+        # New Highs 250 (positive values)
+        if dff["NH250"].notna().any():
+            fig4b.add_trace(
+                go.Bar(
+                    x=dff["Date"],
+                    y=dff["NH250"],
+                    name="% Price above New High 250 days",
+                    marker_color="#4FD555",
+                )
             )
-        )
 
-    if rangebreaks:
-        fig4b.update_xaxes(rangebreaks=rangebreaks)
-    fig4b.update_layout(
-        height=350,
-        template="plotly_dark",
-        hovermode="x unified",
-        barmode='relative',
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-        yaxis_title="New Highs & Lows (250-Day)",
-        margin=dict(l=10, r=10, t=40, b=10),
-    )
-    st.plotly_chart(fig4b, use_container_width=True, config={"displayModeBar": False})
+        # New Lows 250 (negative values)
+        if dff["NL250"].notna().any():
+            fig4b.add_trace(
+                go.Bar(
+                    x=dff["Date"],
+                    y=dff["NL250"] * -1,
+                    name="% Price below New Low 250 days",
+                    marker_color="#E54141",
+                )
+            )
+
+        if rangebreaks:
+            fig4b.update_xaxes(rangebreaks=rangebreaks)
+        fig4b.update_layout(
+            height=350,
+            template="plotly_dark",
+            hovermode="x unified",
+            barmode='relative',
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="New Highs & Lows (250-Day)",
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig4b, use_container_width=True, config={"displayModeBar": False})
 
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
