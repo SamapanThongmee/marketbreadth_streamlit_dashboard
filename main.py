@@ -347,21 +347,21 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA20"], 
-                name="MA20", 
+                name="20-SMA", 
                 line=dict(width=1.5, color="#26a69a")
             ))
         if dff["MA50"].notna().any():
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA50"], 
-                name="MA50", 
+                name="50-SMA", 
                 line=dict(width=2, color="#ff9800")
             ))
         if dff["MA200"].notna().any():
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA200"], 
-                name="MA200", 
+                name="200-SMA", 
                 line=dict(width=2.5, color="#ef5350")
             ))
 
