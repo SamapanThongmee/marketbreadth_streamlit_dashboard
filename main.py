@@ -341,14 +341,49 @@ st.markdown("---")
 with st.expander("📊 Market Breadth Analysis", expanded=True):
     tab1, tab2 = st.tabs(["📊 Moving Averages", "📈 Percentage Distribution"])
 
+    # with tab1:
+    #     fig2 = go.Figure()
+    #     if dff["MA20"].notna().any():
+    #         fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA20"], name="MA20", line=dict(width=1.5)))
+    #     if dff["MA50"].notna().any():
+    #         fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA50"], name="MA50", line=dict(width=2)))
+    #     if dff["MA200"].notna().any():
+    #         fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA200"], name="MA200", line=dict(width=2.5)))
+
+    #     if rangebreaks:
+    #         fig2.update_xaxes(rangebreaks=rangebreaks)
+    #     fig2.update_layout(
+    #         height=400,
+    #         template="plotly_dark",
+    #         hovermode="x unified",
+    #         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    #         margin=dict(l=10, r=10, t=40, b=10),
+    #     )
+    #     st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+
     with tab1:
         fig2 = go.Figure()
         if dff["MA20"].notna().any():
-            fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA20"], name="MA20", line=dict(width=1.5)))
+            fig2.add_trace(go.Scatter(
+                x=dff["Date"], 
+                y=dff["MA20"], 
+                name="MA20", 
+                line=dict(width=1.5, color="#00ff00")  # Green
+            ))
         if dff["MA50"].notna().any():
-            fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA50"], name="MA50", line=dict(width=2)))
+            fig2.add_trace(go.Scatter(
+                x=dff["Date"], 
+                y=dff["MA50"], 
+                name="MA50", 
+                line=dict(width=2, color="#ff8c00")  # Orange
+            ))
         if dff["MA200"].notna().any():
-            fig2.add_trace(go.Scatter(x=dff["Date"], y=dff["MA200"], name="MA200", line=dict(width=2.5)))
+            fig2.add_trace(go.Scatter(
+                x=dff["Date"], 
+                y=dff["MA200"], 
+                name="MA200", 
+                line=dict(width=2.5, color="#ff0000")  # Red
+            ))
 
         if rangebreaks:
             fig2.update_xaxes(rangebreaks=rangebreaks)
@@ -360,6 +395,9 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
+
+
+
 
     with tab2:
         fig3 = go.Figure()
