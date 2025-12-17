@@ -18,7 +18,7 @@ from typing import Optional, Tuple, List
 # -------------------------
 # Page
 # -------------------------
-st.set_page_config(page_title="SPX Dashboard", layout="wide")
+st.set_page_config(page_title="S&P500 Market Analysis", layout="wide")
 
 SHEET_ID = "1faOXwIk7uR51IIeAMrrRPdorRsO7iJ3PDPn-mk5vc24"
 GID = "564353266"
