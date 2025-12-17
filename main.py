@@ -26,7 +26,7 @@ GID = "564353266"
 URL_PRIMARY  = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv&gid={GID}"
 URL_FALLBACK = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/gviz/tq?tqx=out:csv&gid={GID}"
 
-st.title("📈 SPX Dashboard")
+st.title("📈 S&P500 Market Analysis")
 
 # -------------------------
 # Helpers
@@ -226,7 +226,7 @@ def load_sheet_df(url_primary: str, url_fallback: str) -> Tuple[pd.DataFrame, st
 c1, c2, c3 = st.columns([1.2, 1.4, 3.2])
 
 with c1:
-    if st.button("🔄 Refresh data", use_container_width=True):
+    if st.button("🔄 Refresh Data", use_container_width=True):
         st.cache_data.clear()
         st.rerun()
 
