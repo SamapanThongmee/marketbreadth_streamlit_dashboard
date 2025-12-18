@@ -972,38 +972,63 @@ with st.expander("📋 Stock Watchlist", expanded=True):
         if watchlist_df.empty:
             st.warning("No stock watchlist data available")
         else:
+            # Debug: Show actual column names
+            with st.expander("🔍 Debug: View actual column names"):
+                st.write("Actual columns in the data:")
+                st.write(watchlist_df.columns.tolist())
+                st.write("\nFirst few rows:")
+                st.dataframe(watchlist_df.head())
+            
             # Rename columns for better display
-            column_mapping = {
-                'TICKER': 'Ticker',
-                'Sector': 'Sector',
-                'Industry': 'Industry',
-                'PERCENTILE_RANK': 'Relative Strength Ranking',
-                'PCT_52WK_HIGH': 'Percentage close to previous 52-Week High',
-                'Volatility': 'Volatility',
-                'EMA27': 'EMA27',
-                'ADX14': 'Average Directional Index',
-                'DI+': 'Positive Directional Index',
-                'DI-': 'Negative Directional Index',
-                'DX': 'Directional Index Climax Zone',
-                'MACD-V': 'MACD-V',
-                'MACD-VH': 'MACD-VH',
-                'ATRX': 'ATRX',
-                'V to 5d-Avg.V': 'V to 5d-Avg.V',
-                'MACD-V Momentum': 'MACD-V Momentum',
-                'TRENDadvisor': 'TRENDadvisor',
-                'ACTION': 'ACTION'
-            }
+            # First, let's create a mapping that handles various possible column names
+            column_mapping = {}
             
-            # Apply column renaming if columns exist
-            display_cols = {}
-            for old_name, new_name in column_mapping.items():
-                if old_name in watchlist_df.columns:
-                    display_cols[old_name] = new_name
+            # Create mapping based on actual columns
+            for col in watchlist_df.columns:
+                col_upper = str(col).strip().upper()
+                
+                # Map based on column content
+                if col_upper in ['TICKER']:
+                    column_mapping[col] = 'Ticker'
+                elif col_upper in ['SECTOR']:
+                    column_mapping[col] = 'Sector'
+                elif col_upper in ['INDUSTRY']:
+                    column_mapping[col] = 'Industry'
+                elif col_upper in ['PERCENTILE_RANK', 'PERCENTILE RANK']:
+                    column_mapping[col] = 'Relative Strength Ranking'
+                elif col_upper in ['PCT_52WK_HIGH', 'PCT 52WK HIGH']:
+                    column_mapping[col] = 'Percentage close to previous 52-Week High'
+                elif col_upper in ['VOLATILITY']:
+                    column_mapping[col] = 'Volatility'
+                elif col_upper in ['EMA27']:
+                    column_mapping[col] = 'EMA27'
+                elif col_upper in ['ADX14']:
+                    column_mapping[col] = 'Average Directional Index'
+                elif col_upper in ['DI+']:
+                    column_mapping[col] = 'Positive Directional Index'
+                elif col_upper in ['DI-']:
+                    column_mapping[col] = 'Negative Directional Index'
+                elif col_upper in ['DX']:
+                    column_mapping[col] = 'Directional Index Climax Zone'
+                elif col_upper in ['MACD-V']:
+                    column_mapping[col] = 'MACD-V'
+                elif col_upper in ['MACD-VH']:
+                    column_mapping[col] = 'MACD-VH'
+                elif col_upper in ['ATRX']:
+                    column_mapping[col] = 'ATRX'
+                elif col_upper in ['V TO 5D-AVG.V', 'V TO 5D AVG V']:
+                    column_mapping[col] = 'V to 5d-Avg.V'
+                elif col_upper in ['MACD-V MOMENTUM', 'MACDV MOMENTUM', 'MACD V MOMENTUM', 'MACD-V Momentum']:
+                    column_mapping[col] = 'MACD-V Momentum'
+                elif col_upper in ['TRENDADVISOR', 'TREND ADVISOR']:
+                    column_mapping[col] = 'TRENDadvisor'
+                elif col_upper in ['ACTION']:
+                    column_mapping[col] = 'ACTION'
+                else:
+                    column_mapping[col] = col  # Keep original name if no match
             
-            if display_cols:
-                watchlist_display = watchlist_df.rename(columns=display_cols)
-            else:
-                watchlist_display = watchlist_df
+            # Apply column renaming
+            watchlist_display = watchlist_df.rename(columns=column_mapping)
             
             # Display summary metrics
             col1, col2, col3, col4 = st.columns(4)
@@ -1018,12 +1043,12 @@ with st.expander("📋 Stock Watchlist", expanded=True):
             
             with col3:
                 if 'ACTION' in watchlist_display.columns:
-                    buy_signals = (watchlist_display['ACTION'].str.upper() == 'BUY').sum()
+                    buy_signals = (watchlist_display['ACTION'].astype(str).str.upper() == 'BUY').sum()
                     st.metric("Buy Signals", buy_signals)
             
             with col4:
                 if 'ACTION' in watchlist_display.columns:
-                    sell_signals = (watchlist_display['ACTION'].str.upper() == 'SELL').sum()
+                    sell_signals = (watchlist_display['ACTION'].astype(str).str.upper() == 'SELL').sum()
                     st.metric("Sell Signals", sell_signals)
             
             st.markdown("---")
@@ -1040,7 +1065,7 @@ with st.expander("📋 Stock Watchlist", expanded=True):
             
             with col_filter2:
                 if 'ACTION' in watchlist_display.columns:
-                    actions = ['All'] + sorted(watchlist_display['ACTION'].dropna().unique().tolist())
+                    actions = ['All'] + sorted(watchlist_display['ACTION'].dropna().astype(str).unique().tolist())
                     selected_action = st.selectbox("Filter by Action", actions)
                 else:
                     selected_action = 'All'
@@ -1058,11 +1083,11 @@ with st.expander("📋 Stock Watchlist", expanded=True):
                 filtered_df = filtered_df[filtered_df['Sector'] == selected_sector]
             
             if selected_action != 'All' and 'ACTION' in filtered_df.columns:
-                filtered_df = filtered_df[filtered_df['ACTION'] == selected_action]
+                filtered_df = filtered_df[filtered_df['ACTION'].astype(str) == selected_action]
             
             if search_ticker and 'Ticker' in filtered_df.columns:
                 filtered_df = filtered_df[
-                    filtered_df['Ticker'].str.contains(search_ticker, case=False, na=False)
+                    filtered_df['Ticker'].astype(str).str.contains(search_ticker, case=False, na=False)
                 ]
             
             # Display the filtered table
