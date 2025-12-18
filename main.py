@@ -704,8 +704,8 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
             num_points = min(50, len(available_dates))
             recent_dates = available_dates[-num_points:]
             
-            # Create slider for date selection and trail length
-            col1, col2, col3 = st.columns([2, 1, 1])
+            # Create slider for date selection
+            col1, col2 = st.columns([3, 1])
             
             with col1:
                 date_index = st.slider(
@@ -721,20 +721,11 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 selected_date = recent_dates[date_index]
                 st.metric("Selected Date", selected_date.strftime('%Y-%m-%d'))
             
-            with col3:
-                trail_length = st.slider(
-                    "Trail Length",
-                    min_value=1,
-                    max_value=20,
-                    value=10,
-                    step=1,
-                    key="trail_length"
-                )
-            
             # Get data for selected date
             selected_data = rrg_df[rrg_df['Date'] == selected_date].iloc[0]
             
-            # Get historical data for trails (lookback from selected date)
+            # Get historical data for trails (fixed at 5 points)
+            trail_length = 5
             trail_start_index = max(0, date_index - trail_length + 1)
             trail_dates = recent_dates[trail_start_index:date_index + 1]
             trail_df = rrg_df[rrg_df['Date'].isin(trail_dates)]
@@ -805,7 +796,7 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 fig_rrg.add_shape(type="rect", x0=100, y0=y_min, x1=x_max, y1=100,
                                  fillcolor="#fdeaa8", opacity=0.3, layer="below", line_width=0)
                 
-                # Add trails for each sector
+                # Add trails for each sector with gradient and taper
                 for sector_name, (momentum_col, ratio_col) in sectors.items():
                     trail_x = []
                     trail_y = []
@@ -819,17 +810,55 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                             trail_y.append(momentum)
                     
                     if len(trail_x) > 1:
-                        # Add trail line
+                        # Draw trail segments with varying width and opacity (gradient effect)
+                        base_color = sector_colors.get(sector_name, '#95a5a6')
+                        
+                        # Convert hex to RGB
+                        h = base_color.lstrip('#')
+                        rgb = tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+                        
+                        # Draw each segment with decreasing width and opacity
+                        num_segments = len(trail_x) - 1
+                        for i in range(num_segments):
+                            # Calculate position in trail (0 = oldest, 1 = newest)
+                            position = (i + 1) / num_segments
+                            
+                            # Taper: width increases toward current position
+                            # Start width: 1, End width: 4
+                            line_width = 1 + (position * 3)
+                            
+                            # Gradient: opacity increases toward current position
+                            # Start opacity: 0.2, End opacity: 0.8
+                            opacity = 0.2 + (position * 0.6)
+                            
+                            # Color with varying opacity
+                            color_with_opacity = f'rgba({rgb[0]}, {rgb[1]}, {rgb[2]}, {opacity})'
+                            
+                            fig_rrg.add_trace(
+                                go.Scatter(
+                                    x=[trail_x[i], trail_x[i+1]],
+                                    y=[trail_y[i], trail_y[i+1]],
+                                    mode='lines',
+                                    line=dict(
+                                        width=line_width,
+                                        color=color_with_opacity
+                                    ),
+                                    showlegend=False,
+                                    hoverinfo='skip'
+                                )
+                            )
+                        
+                        # Add small marker at the start of trail (oldest point)
                         fig_rrg.add_trace(
                             go.Scatter(
-                                x=trail_x,
-                                y=trail_y,
-                                mode='lines',
-                                line=dict(
-                                    width=2,
-                                    color=sector_colors.get(sector_name, '#95a5a6')
+                                x=[trail_x[0]],
+                                y=[trail_y[0]],
+                                mode='markers',
+                                marker=dict(
+                                    size=4,
+                                    color=base_color,
+                                    opacity=0.3
                                 ),
-                                opacity=0.5,
                                 showlegend=False,
                                 hoverinfo='skip'
                             )
