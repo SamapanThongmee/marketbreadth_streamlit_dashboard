@@ -780,11 +780,9 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 fig_rrg.add_hline(y=100, line_dash="dash", line_color="gray", line_width=2, opacity=0.7)
                 fig_rrg.add_vline(x=100, line_dash="dash", line_color="gray", line_width=2, opacity=0.7)
                 
-                # Calculate reasonable axis ranges
-                x_min = min(plot_df['RS_Ratio'].min() - 5, 95)
-                x_max = max(plot_df['RS_Ratio'].max() + 5, 105)
-                y_min = min(plot_df['RS_Momentum'].min() - 5, 95)
-                y_max = max(plot_df['RS_Momentum'].max() + 5, 105)
+                # Fixed axis ranges
+                x_min, x_max = 95, 105
+                y_min, y_max = 95, 105
                 
                 # Add quadrant background colors
                 fig_rrg.add_shape(type="rect", x0=100, y0=100, x1=x_max, y1=y_max,
@@ -797,13 +795,13 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                                  fillcolor="orange", opacity=0.1, layer="below", line_width=0)
                 
                 # Add quadrant labels
-                fig_rrg.add_annotation(x=x_max-2, y=y_max-2, text="Leading", showarrow=False,
+                fig_rrg.add_annotation(x=104, y=104, text="Leading", showarrow=False,
                                       font=dict(size=16, color="lightgreen", family="Arial Black"))
-                fig_rrg.add_annotation(x=x_min+2, y=y_max-2, text="Improving", showarrow=False,
+                fig_rrg.add_annotation(x=96, y=104, text="Improving", showarrow=False,
                                       font=dict(size=16, color="yellow", family="Arial Black"))
-                fig_rrg.add_annotation(x=x_min+2, y=y_min+2, text="Lagging", showarrow=False,
+                fig_rrg.add_annotation(x=96, y=96, text="Lagging", showarrow=False,
                                       font=dict(size=16, color="red", family="Arial Black"))
-                fig_rrg.add_annotation(x=x_max-2, y=y_min+2, text="Weakening", showarrow=False,
+                fig_rrg.add_annotation(x=104, y=96, text="Weakening", showarrow=False,
                                       font=dict(size=16, color="orange", family="Arial Black"))
                 
                 fig_rrg.update_layout(
