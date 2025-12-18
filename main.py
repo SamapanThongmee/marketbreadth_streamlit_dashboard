@@ -121,11 +121,15 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
     # McClellan columns
     col_mcclellan_osc = _pick_col(df, ["McClellan_Oscillator", "McClellanOscillator"])
     col_mcclellan_sum = _pick_col(df, ["McClellan_Summation_Index", "McClellanSummationIndex"])
+    
+    # RSI columns
+    col_rsi_over_70 = _pick_col(df, ["RSI_over_70", "RSIover70"])
+    col_rsi_below_30 = _pick_col(df, ["RSI_below_30", "RSIbelow30"])
 
     # positional fallback (A..S style)
     if not all([col_date, col_open, col_high, col_low, col_close]):
         def try_positional(offset: int = 0) -> dict:
-            if df.shape[1] < 29 + offset:
+            if df.shape[1] < 49 + offset:  # Updated for more columns
                 return {}
             cols = df.columns.tolist()
             return {
@@ -143,8 +147,10 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
                 "NH250": cols[23 + offset],
                 "NL20": cols[24 + offset],
                 "NL250": cols[28 + offset],
-                "McClellan_Oscillator": cols[9 + offset],  # Column J (index 9)
-                "McClellan_Summation_Index": cols[10 + offset],  # Column K (index 10)
+                "McClellan_Oscillator": cols[9 + offset],
+                "McClellan_Summation_Index": cols[10 + offset],
+                "RSI_over_70": cols[47 + offset],  # Column AV (index 47)
+                "RSI_below_30": cols[48 + offset],  # Column AW (index 48)
             }
 
         mapping = try_positional(0) or try_positional(1)
@@ -168,6 +174,8 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
             "NL250": df[mapping["NL250"]],
             "McClellan_Oscillator": df[mapping["McClellan_Oscillator"]],
             "McClellan_Summation_Index": df[mapping["McClellan_Summation_Index"]],
+            "RSI_over_70": df[mapping["RSI_over_70"]],
+            "RSI_below_30": df[mapping["RSI_below_30"]],
         })
     else:
         out = pd.DataFrame({
@@ -187,12 +195,14 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
             "NL250": df[col_nl250] if col_nl250 else pd.NA,
             "McClellan_Oscillator": df[col_mcclellan_osc] if col_mcclellan_osc else pd.NA,
             "McClellan_Summation_Index": df[col_mcclellan_sum] if col_mcclellan_sum else pd.NA,
+            "RSI_over_70": df[col_rsi_over_70] if col_rsi_over_70 else pd.NA,
+            "RSI_below_30": df[col_rsi_below_30] if col_rsi_below_30 else pd.NA,
         })
 
     out["Date"] = _parse_date_series(out["Date"])
     out = out.dropna(subset=["Date"]).sort_values("Date")
 
-    for c in ["Open", "High", "Low", "Close", "MA20", "MA50", "MA200", "NH20", "NH250", "NL20", "NL250", "McClellan_Oscillator", "McClellan_Summation_Index"]:
+    for c in ["Open", "High", "Low", "Close", "MA20", "MA50", "MA200", "NH20", "NH250", "NL20", "NL250", "McClellan_Oscillator", "McClellan_Summation_Index", "RSI_over_70", "RSI_below_30"]:
         out[c] = _clean_numeric_series(out[c])
 
     out["PctAbove"] = _normalize_percent(out["PctAbove"])
@@ -358,7 +368,7 @@ with st.expander("📈 S&P 500 Index", expanded=True):
 st.markdown("---")
 
 with st.expander("📊 Market Breadth Analysis", expanded=True):
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows", "📈 McClellan"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows", "📈 McClellan", "📊 Relative Strength Index"])
 
     with tab1:
         fig2 = go.Figure()
@@ -566,7 +576,46 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig5b, use_container_width=True, config={"displayModeBar": False})
-        
+
+
+    with tab5:
+        # Single combined chart with both RSI lines
+        fig6 = go.Figure()
+
+        if dff["RSI_over_70"].notna().any():
+            fig6.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["RSI_over_70"],
+                    name="RSI Over 70",
+                    line=dict(width=2, color="#00ff00"),  # Green
+                    mode='lines'
+                )
+            )
+
+        if dff["RSI_below_30"].notna().any():
+            fig6.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["RSI_below_30"],
+                    name="RSI Below 30",
+                    line=dict(width=2, color="#ff0000"),  # Red
+                    mode='lines'
+                )
+            )
+
+        if rangebreaks:
+            fig6.update_xaxes(rangebreaks=rangebreaks)
+        fig6.update_layout(
+            height=400,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="Relative Strength Index",
+            yaxis=dict(range=[0, 100]),  # Set y-axis scale 0-100
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig6, use_container_width=True, config={"displayModeBar": False})
         
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
