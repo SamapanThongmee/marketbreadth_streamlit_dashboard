@@ -458,7 +458,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Bar(
                     x=dff["Date"],
                     y=dff["NL20"] * -1,
-                    name="Percentage of Members with New 4 Week s",
+                    name="Percentage of Members with New 4 Week",
                     marker_color="salmon",
                 )
             )
