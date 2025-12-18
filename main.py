@@ -263,6 +263,31 @@ def load_sheet_df(url_primary: str, url_fallback: str) -> Tuple[pd.DataFrame, st
 
     raise ValueError(f"Google Sheet did not return CSV. Last error: {last_err}")
 
+@st.cache_data(ttl=600, show_spinner=False)
+def load_rrg_df(sheet_id: str, gid: str) -> pd.DataFrame:
+    """Load RRG data from Google Sheets"""
+    url_primary = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={gid}"
+    url_fallback = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&gid={gid}"
+    
+    session = requests.Session()
+    headers = {"User-Agent": "Mozilla/5.0"}
+    
+    last_err = None
+    for url in (url_primary, url_fallback):
+        try:
+            r = session.get(url, headers=headers, timeout=20, allow_redirects=True)
+            r.raise_for_status()
+            txt = r.text or ""
+            if _looks_like_html(txt):
+                last_err = f"HTML/login page returned from: {url}"
+                continue
+            df = pd.read_csv(StringIO(txt))
+            return df
+        except Exception as e:
+            last_err = str(e)
+    
+    raise ValueError(f"RRG data load failed. Last error: {last_err}")
+
 # -------------------------
 # Controls
 # -------------------------
@@ -655,6 +680,96 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig6, use_container_width=True, config={"displayModeBar": False})
+
+st.markdown("---")
+
+# -------------------------
+# RRG Section
+# -------------------------
+RRG_GID = "1041193797"
+
+with st.expander("📊 Relative Rotation Graph", expanded=True):
+    try:
+        rrg_df = load_rrg_df(SHEET_ID, RRG_GID)
+        
+        # Display basic info about RRG data
+        st.write(f"RRG Data: {len(rrg_df)} rows, {len(rrg_df.columns)} columns")
+        
+        # Show column names for debugging
+        with st.expander("Debug: RRG Columns"):
+            st.write(rrg_df.columns.tolist())
+            st.write(rrg_df.head(10))
+        
+        # Basic RRG scatter plot
+        # Assuming columns: Symbol, RS-Ratio, RS-Momentum (adjust based on actual column names)
+        if len(rrg_df) > 0:
+            # Try to identify relevant columns
+            cols = rrg_df.columns.tolist()
             
+            # Look for common RRG column patterns
+            symbol_col = None
+            ratio_col = None
+            momentum_col = None
+            
+            for col in cols:
+                col_lower = str(col).lower()
+                if 'symbol' in col_lower or 'ticker' in col_lower or 'name' in col_lower:
+                    symbol_col = col
+                elif 'ratio' in col_lower or 'rs-ratio' in col_lower:
+                    ratio_col = col
+                elif 'momentum' in col_lower or 'rs-momentum' in col_lower:
+                    momentum_col = col
+            
+            if symbol_col and ratio_col and momentum_col:
+                # Create RRG scatter plot
+                fig_rrg = go.Figure()
+                
+                # Filter latest data (assuming there's a date column)
+                rrg_plot = rrg_df.copy()
+                
+                # Add scatter plot
+                fig_rrg.add_trace(
+                    go.Scatter(
+                        x=rrg_plot[ratio_col],
+                        y=rrg_plot[momentum_col],
+                        mode='markers+text',
+                        marker=dict(size=10, color='#26a69a'),
+                        text=rrg_plot[symbol_col],
+                        textposition='top center',
+                        name='Stocks'
+                    )
+                )
+                
+                # Add quadrant lines at 100
+                fig_rrg.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.5)
+                fig_rrg.add_vline(x=100, line_dash="dash", line_color="gray", opacity=0.5)
+                
+                # Add quadrant labels
+                fig_rrg.add_annotation(x=105, y=105, text="Leading", showarrow=False, font=dict(size=14, color="lightgreen"))
+                fig_rrg.add_annotation(x=95, y=105, text="Improving", showarrow=False,font=dict(size=14, color="yellow"))
+                fig_rrg.add_annotation(x=95, y=95, text="Lagging", showarrow=False,font=dict(size=14, color="red"))
+                fig_rrg.add_annotation(x=105, y=95, text="Weakening", showarrow=False,font=dict(size=14, color="orange"))
+                
+                fig_rrg.update_layout(
+                    height=600,
+                    template="plotly_dark",
+                    xaxis_title="RS-Ratio",
+                    yaxis_title="RS-Momentum",
+                    hovermode="closest",
+                    showlegend=False,
+                    margin=dict(l=10, r=10, t=40, b=10),
+                )
+                
+                st.plotly_chart(fig_rrg, use_container_width=True, config={"displayModeBar": True})
+            else:
+                st.warning(f"Could not identify RRG columns. Found columns: {cols}")
+                st.write("Please specify the correct column names for Symbol, RS-Ratio, and RS-Momentum")
+        else:
+            st.warning("No RRG data available")
+            
+    except Exception as e:
+        st.error(f"Failed to load RRG data: {e}")
+        st.info("Please check the Google Sheet permissions and GID")
+
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
