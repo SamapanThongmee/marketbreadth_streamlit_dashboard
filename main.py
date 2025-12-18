@@ -1022,6 +1022,23 @@ with st.expander("📋 Stock Watchlist", expanded=True):
             # Apply column renaming
             watchlist_display = watchlist_df.rename(columns=column_mapping)
             
+            # Clean special characters from text columns (fix encoding issues)
+            text_columns_to_clean = ['MACD-V Momentum', 'TRENDadvisor', 'ACTION']
+            
+            for col in text_columns_to_clean:
+                if col in watchlist_display.columns:
+                    # Remove problematic unicode characters and replace with clean text
+                    watchlist_display[col] = watchlist_display[col].astype(str).str.replace('â', '', regex=False)
+                    watchlist_display[col] = watchlist_display[col].str.replace('†', '+', regex=False)
+                    watchlist_display[col] = watchlist_display[col].str.replace('‡', '++', regex=False)
+                    watchlist_display[col] = watchlist_display[col].str.replace('↔', '<->', regex=False)
+                    watchlist_display[col] = watchlist_display[col].str.replace('↑', '^', regex=False)
+                    watchlist_display[col] = watchlist_display[col].str.replace('↓', 'v', regex=False)
+                    # Remove any remaining special unicode characters
+                    watchlist_display[col] = watchlist_display[col].str.encode('ascii', 'ignore').str.decode('ascii')
+                    # Clean up extra spaces
+                    watchlist_display[col] = watchlist_display[col].str.strip()
+            
             # Display summary metrics
             col1, col2, col3, col4 = st.columns(4)
             
