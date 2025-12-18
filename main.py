@@ -117,11 +117,15 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
     col_nh250 = _pick_col(df, ["NH250"])
     col_nl20 = _pick_col(df, ["NL20"])
     col_nl250 = _pick_col(df, ["NL250"])
+    
+    # McClellan columns
+    col_mcclellan_osc = _pick_col(df, ["McClellan_Oscillator", "McClellanOscillator"])
+    col_mcclellan_sum = _pick_col(df, ["McClellan_Summation_Index", "McClellanSummationIndex"])
 
     # positional fallback (A..S style)
     if not all([col_date, col_open, col_high, col_low, col_close]):
         def try_positional(offset: int = 0) -> dict:
-            if df.shape[1] < 29 + offset:  # Updated to include more columns
+            if df.shape[1] < 29 + offset:
                 return {}
             cols = df.columns.tolist()
             return {
@@ -135,10 +139,12 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
                 "MA200":cols[14 + offset],
                 "PctAbove": cols[15 + offset],
                 "PctBelow": cols[18 + offset],
-                "NH20": cols[19 + offset],   # Column T (index 19)
-                "NH250": cols[23 + offset],  # Column X (index 23)
-                "NL20": cols[24 + offset],   # Column Y (index 24)
-                "NL250": cols[28 + offset],  # Column AC (index 28)
+                "NH20": cols[19 + offset],
+                "NH250": cols[23 + offset],
+                "NL20": cols[24 + offset],
+                "NL250": cols[28 + offset],
+                "McClellan_Oscillator": cols[9 + offset],  # Column J (index 9)
+                "McClellan_Summation_Index": cols[10 + offset],  # Column K (index 10)
             }
 
         mapping = try_positional(0) or try_positional(1)
@@ -160,6 +166,8 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
             "NH250": df[mapping["NH250"]],
             "NL20": df[mapping["NL20"]],
             "NL250": df[mapping["NL250"]],
+            "McClellan_Oscillator": df[mapping["McClellan_Oscillator"]],
+            "McClellan_Summation_Index": df[mapping["McClellan_Summation_Index"]],
         })
     else:
         out = pd.DataFrame({
@@ -177,12 +185,14 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
             "NH250": df[col_nh250] if col_nh250 else pd.NA,
             "NL20": df[col_nl20] if col_nl20 else pd.NA,
             "NL250": df[col_nl250] if col_nl250 else pd.NA,
+            "McClellan_Oscillator": df[col_mcclellan_osc] if col_mcclellan_osc else pd.NA,
+            "McClellan_Summation_Index": df[col_mcclellan_sum] if col_mcclellan_sum else pd.NA,
         })
 
     out["Date"] = _parse_date_series(out["Date"])
     out = out.dropna(subset=["Date"]).sort_values("Date")
 
-    for c in ["Open", "High", "Low", "Close", "MA20", "MA50", "MA200", "NH20", "NH250", "NL20", "NL250"]:
+    for c in ["Open", "High", "Low", "Close", "MA20", "MA50", "MA200", "NH20", "NH250", "NL20", "NL250", "McClellan_Oscillator", "McClellan_Summation_Index"]:
         out[c] = _clean_numeric_series(out[c])
 
     out["PctAbove"] = _normalize_percent(out["PctAbove"])
@@ -348,7 +358,7 @@ with st.expander("📈 S&P 500 Index", expanded=True):
 st.markdown("---")
 
 with st.expander("📊 Market Breadth Analysis", expanded=True):
-    tab1, tab2, tab3 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows", "📈 McClellan"])
 
     with tab1:
         fig2 = go.Figure()
@@ -504,5 +514,59 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
         )
         st.plotly_chart(fig4b, use_container_width=True, config={"displayModeBar": False})
 
+    with tab4:
+        # Chart 1: McClellan Oscillator
+        fig5a = go.Figure()
+
+        if dff["McClellan_Oscillator"].notna().any():
+            fig5a.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["McClellan_Oscillator"],
+                    name="McClellan Oscillator",
+                    line=dict(width=2, color="#00ff00"),  # Green
+                    mode='lines'
+                )
+            )
+
+        if rangebreaks:
+            fig5a.update_xaxes(rangebreaks=rangebreaks)
+        fig5a.update_layout(
+            height=350,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="McClellan Oscillator",
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig5a, use_container_width=True, config={"displayModeBar": False})
+
+        # Chart 2: McClellan Summation Index
+        fig5b = go.Figure()
+
+        if dff["McClellan_Summation_Index"].notna().any():
+            fig5b.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["McClellan_Summation_Index"],
+                    name="McClellan Summation Index",
+                    line=dict(width=2, color="#0000ff"),  # Blue
+                    mode='lines'
+                )
+            )
+
+        if rangebreaks:
+            fig5b.update_xaxes(rangebreaks=rangebreaks)
+        fig5b.update_layout(
+            height=350,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="McClellan Summation Index",
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig5b, use_container_width=True, config={"displayModeBar": False})
+        
+        
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
