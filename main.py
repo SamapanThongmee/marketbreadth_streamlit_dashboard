@@ -587,7 +587,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Scatter(
                     x=dff["Date"],
                     y=dff["RSI_over_70"],
-                    name="RSI Over 70",
+                    name="Percentage of Members with 14-Day RSI Above 70 ",
                     line=dict(width=2, color="#00ff00"),  # Green
                     mode='lines'
                 )
@@ -598,7 +598,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Scatter(
                     x=dff["Date"],
                     y=dff["RSI_below_30"],
-                    name="RSI Below 30",
+                    name="Percentage of Members with 14-Day RSI Below 30",
                     line=dict(width=2, color="#ff0000"),  # Red
                     mode='lines'
                 )
