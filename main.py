@@ -251,8 +251,8 @@ with c2:
     months_to_show = st.selectbox("Time Period (month)", [3, 6, 12], index=1)
 
 # Set default values
-include_holidays = False
-disable_breaks = True
+include_holidays = True
+disable_breaks = False
 
 # -------------------------
 # Load + Parse
