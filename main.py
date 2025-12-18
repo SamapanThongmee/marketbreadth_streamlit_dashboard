@@ -461,7 +461,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             hovermode="x unified",
             barmode='relative',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            yaxis_title="New Highs & Lows (20-Day)",
+            yaxis_title="New Highs & New Lows (4 Week)",
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig4a, use_container_width=True, config={"displayModeBar": False})
@@ -475,7 +475,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Bar(
                     x=dff["Date"],
                     y=dff["NH250"],
-                    name="% Price above New High 250 days",
+                    name="Percentage of Members with New 52 Week Highs",
                     marker_color="#4FD555",
                 )
             )
@@ -486,7 +486,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Bar(
                     x=dff["Date"],
                     y=dff["NL250"] * -1,
-                    name="% Price below New Low 250 days",
+                    name="Percentage of Members with New 52 Week Lows",
                     marker_color="#E54141",
                 )
             )
@@ -499,7 +499,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             hovermode="x unified",
             barmode='relative',
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            yaxis_title="New Highs & Lows (250-Day)",
+            yaxis_title="New Highs & New Lows (52 Week)",
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig4b, use_container_width=True, config={"displayModeBar": False})
