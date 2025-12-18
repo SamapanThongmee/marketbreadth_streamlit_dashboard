@@ -374,9 +374,17 @@ with st.expander("📈 S&P 500 Index", expanded=True):
 st.markdown("---")
 
 with st.expander("📊 Market Breadth Analysis", expanded=True):
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows", "📈 McClellan", "📊 Relative Strength Index", "📈 Advances-Declines Line"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+        "📊 Moving Averages", 
+        "📈 Double Moving Averages", 
+        "📊 New Highs & Lows", 
+        "📈 Advances-Declines Line",
+        "📈 McClellan", 
+        "📊 Relative Strength Index"
+    ])
 
     with tab1:
+        # Moving Averages chart (stays the same)
         fig2 = go.Figure()
         if dff["MA20"].notna().any():
             fig2.add_trace(go.Scatter(
@@ -414,6 +422,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
         st.plotly_chart(fig2, use_container_width=True, config={"displayModeBar": False})
 
     with tab2:
+        # Double Moving Averages chart (stays the same)
         fig3 = go.Figure()
 
         if dff["PctAbove"].notna().any():
@@ -454,10 +463,10 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
         st.plotly_chart(fig3, use_container_width=True, config={"displayModeBar": False})
 
     with tab3:
+        # New Highs & Lows charts (stays the same)
         # Chart 1: NH20 and NL20
         fig4a = go.Figure()
 
-        # New Highs 20 (positive values)
         if dff["NH20"].notna().any():
             fig4a.add_trace(
                 go.Bar(
@@ -468,7 +477,6 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 )
             )
 
-        # New Lows 20 (negative values)
         if dff["NL20"].notna().any():
             fig4a.add_trace(
                 go.Bar(
@@ -495,7 +503,6 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
         # Chart 2: NH250 and NL250
         fig4b = go.Figure()
         
-        # New Highs 250 (positive values)
         if dff["NH250"].notna().any():
             fig4b.add_trace(
                 go.Bar(
@@ -506,7 +513,6 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 )
             )
 
-        # New Lows 250 (negative values)
         if dff["NL250"].notna().any():
             fig4b.add_trace(
                 go.Bar(
@@ -531,6 +537,34 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
         st.plotly_chart(fig4b, use_container_width=True, config={"displayModeBar": False})
 
     with tab4:
+        # Advances-Declines Line chart (moved from tab6 to tab4)
+        fig7 = go.Figure()
+
+        if dff["AD_Line"].notna().any():
+            fig7.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["AD_Line"],
+                    name="Advances-Declines Line",
+                    line=dict(width=2, color="#0000ff"),
+                    mode='lines'
+                )
+            )
+
+        if rangebreaks:
+            fig7.update_xaxes(rangebreaks=rangebreaks)
+        fig7.update_layout(
+            height=400,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="Advances-Declines Line",
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig7, use_container_width=True, config={"displayModeBar": False})
+
+    with tab5:
+        # McClellan charts (moved from tab4 to tab5)
         # Chart 1: McClellan Oscillator
         fig5a = go.Figure()
 
@@ -540,7 +574,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                     x=dff["Date"],
                     y=dff["McClellan_Oscillator"],
                     name="McClellan Oscillator",
-                    line=dict(width=2, color="#00ff00"),  # Green
+                    line=dict(width=2, color="#00ff00"),
                     mode='lines'
                 )
             )
@@ -566,7 +600,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                     x=dff["Date"],
                     y=dff["McClellan_Summation_Index"],
                     name="McClellan Summation Index",
-                    line=dict(width=2, color="#0000ff"),  # Blue
+                    line=dict(width=2, color="#0000ff"),
                     mode='lines'
                 )
             )
@@ -583,9 +617,8 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
         )
         st.plotly_chart(fig5b, use_container_width=True, config={"displayModeBar": False})
 
-
-    with tab5:
-        # Single combined chart with both RSI lines
+    with tab6:
+        # Relative Strength Index chart (moved from tab5 to tab6)
         fig6 = go.Figure()
 
         if dff["RSI_over_70"].notna().any():
@@ -594,7 +627,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                     x=dff["Date"],
                     y=dff["RSI_over_70"],
                     name="Percentage of Members with 14-Day RSI Above 70 ",
-                    line=dict(width=2, color="#00ff00"),  # Green
+                    line=dict(width=2, color="#00ff00"),
                     mode='lines'
                 )
             )
@@ -605,7 +638,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                     x=dff["Date"],
                     y=dff["RSI_below_30"],
                     name="Percentage of Members with 14-Day RSI Below 30",
-                    line=dict(width=2, color="#ff0000"),  # Red
+                    line=dict(width=2, color="#ff0000"),
                     mode='lines'
                 )
             )
@@ -618,38 +651,10 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             hovermode="x unified",
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             yaxis_title="Relative Strength Index",
-            yaxis=dict(range=[0, 100]),  # Set y-axis scale 0-100
+            yaxis=dict(range=[0, 100]),
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig6, use_container_width=True, config={"displayModeBar": False})
-
-
-    with tab6:
-        # Advances-Declines Line chart
-        fig7 = go.Figure()
-
-        if dff["AD_Line"].notna().any():
-            fig7.add_trace(
-                go.Scatter(
-                    x=dff["Date"],
-                    y=dff["AD_Line"],
-                    name="Advances-Declines Line",
-                    line=dict(width=2, color="#0000ff"),  # Blue
-                    mode='lines'
-                )
-            )
-
-        if rangebreaks:
-            fig7.update_xaxes(rangebreaks=rangebreaks)
-        fig7.update_layout(
-            height=400,
-            template="plotly_dark",
-            hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            yaxis_title="Advances-Declines Line",
-            margin=dict(l=10, r=10, t=40, b=10),
-        )
-        st.plotly_chart(fig7, use_container_width=True, config={"displayModeBar": False})
             
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
