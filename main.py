@@ -959,4 +959,189 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
         st.code(traceback.format_exc())
 
 st.markdown("---")
+
+# -------------------------
+# Stock Watchlist Section
+# -------------------------
+WATCHLIST_GID = "70528074"
+
+with st.expander("📋 Stock Watchlist", expanded=True):
+    try:
+        watchlist_df = load_rrg_df(SHEET_ID, WATCHLIST_GID)
+        
+        if watchlist_df.empty:
+            st.warning("No stock watchlist data available")
+        else:
+            # Rename columns for better display
+            column_mapping = {
+                'TICKER': 'Ticker',
+                'Sector': 'Sector',
+                'Industry': 'Industry',
+                'PERCENTILE_RANK': 'Relative Strength Ranking',
+                'PCT_52WK_HIGH': 'Percentage close to previous 52-Week High',
+                'Volatility': 'Volatility',
+                'EMA27': 'EMA27',
+                'ADX14': 'Average Directional Index',
+                'DI+': 'Positive Directional Index',
+                'DI-': 'Negative Directional Index',
+                'DX': 'Directional Index Climax Zone',
+                'MACD-V': 'MACD-V',
+                'MACD-VH': 'MACD-VH',
+                'ATRX': 'ATRX',
+                'V to 5d-Avg.V': 'V to 5d-Avg.V',
+                'MACD-V Momentum': 'MACD-V Momentum',
+                'TRENDadvisor': 'TRENDadvisor',
+                'ACTION': 'ACTION'
+            }
+            
+            # Apply column renaming if columns exist
+            display_cols = {}
+            for old_name, new_name in column_mapping.items():
+                if old_name in watchlist_df.columns:
+                    display_cols[old_name] = new_name
+            
+            if display_cols:
+                watchlist_display = watchlist_df.rename(columns=display_cols)
+            else:
+                watchlist_display = watchlist_df
+            
+            # Display summary metrics
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Total Stocks", len(watchlist_display))
+            
+            with col2:
+                if 'Sector' in watchlist_display.columns:
+                    unique_sectors = watchlist_display['Sector'].nunique()
+                    st.metric("Sectors", unique_sectors)
+            
+            with col3:
+                if 'ACTION' in watchlist_display.columns:
+                    buy_signals = (watchlist_display['ACTION'].str.upper() == 'BUY').sum()
+                    st.metric("Buy Signals", buy_signals)
+            
+            with col4:
+                if 'ACTION' in watchlist_display.columns:
+                    sell_signals = (watchlist_display['ACTION'].str.upper() == 'SELL').sum()
+                    st.metric("Sell Signals", sell_signals)
+            
+            st.markdown("---")
+            
+            # Filter options
+            col_filter1, col_filter2, col_filter3 = st.columns(3)
+            
+            with col_filter1:
+                if 'Sector' in watchlist_display.columns:
+                    sectors = ['All'] + sorted(watchlist_display['Sector'].dropna().unique().tolist())
+                    selected_sector = st.selectbox("Filter by Sector", sectors)
+                else:
+                    selected_sector = 'All'
+            
+            with col_filter2:
+                if 'ACTION' in watchlist_display.columns:
+                    actions = ['All'] + sorted(watchlist_display['ACTION'].dropna().unique().tolist())
+                    selected_action = st.selectbox("Filter by Action", actions)
+                else:
+                    selected_action = 'All'
+            
+            with col_filter3:
+                if 'Ticker' in watchlist_display.columns:
+                    search_ticker = st.text_input("Search Ticker", "")
+                else:
+                    search_ticker = ""
+            
+            # Apply filters
+            filtered_df = watchlist_display.copy()
+            
+            if selected_sector != 'All' and 'Sector' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['Sector'] == selected_sector]
+            
+            if selected_action != 'All' and 'ACTION' in filtered_df.columns:
+                filtered_df = filtered_df[filtered_df['ACTION'] == selected_action]
+            
+            if search_ticker and 'Ticker' in filtered_df.columns:
+                filtered_df = filtered_df[
+                    filtered_df['Ticker'].str.contains(search_ticker, case=False, na=False)
+                ]
+            
+            # Display the filtered table
+            st.write(f"Showing **{len(filtered_df)}** stocks")
+            
+            # Format numeric columns
+            numeric_columns = [
+                'Relative Strength Ranking',
+                'Percentage close to previous 52-Week High',
+                'Volatility',
+                'EMA27',
+                'Average Directional Index',
+                'Positive Directional Index',
+                'Negative Directional Index',
+                'Directional Index Climax Zone',
+                'MACD-V',
+                'MACD-VH',
+                'ATRX',
+                'V to 5d-Avg.V',
+                'MACD-V Momentum'
+            ]
+            
+            # Convert numeric columns and format
+            for col in numeric_columns:
+                if col in filtered_df.columns:
+                    filtered_df[col] = pd.to_numeric(filtered_df[col], errors='coerce')
+            
+            # Style the dataframe
+            def highlight_action(row):
+                if 'ACTION' not in row:
+                    return [''] * len(row)
+                
+                action = str(row.get('ACTION', '')).upper()
+                if action == 'BUY':
+                    return ['background-color: rgba(0, 255, 0, 0.2)'] * len(row)
+                elif action == 'SELL':
+                    return ['background-color: rgba(255, 0, 0, 0.2)'] * len(row)
+                else:
+                    return [''] * len(row)
+            
+            # Display styled dataframe
+            if not filtered_df.empty:
+                styled_df = filtered_df.style.apply(highlight_action, axis=1)
+                
+                # Format numeric columns to 2 decimal places
+                format_dict = {}
+                for col in numeric_columns:
+                    if col in filtered_df.columns:
+                        format_dict[col] = '{:.2f}'
+                
+                if format_dict:
+                    styled_df = styled_df.format(format_dict, na_rep='-')
+                
+                st.dataframe(
+                    styled_df,
+                    use_container_width=True,
+                    height=600
+                )
+            else:
+                st.info("No stocks match the selected filters")
+            
+            # Export option
+            st.markdown("---")
+            col_export1, col_export2 = st.columns([3, 1])
+            
+            with col_export2:
+                csv = filtered_df.to_csv(index=False)
+                st.download_button(
+                    label="📥 Download CSV",
+                    data=csv,
+                    file_name=f"stock_watchlist_{pd.Timestamp.now().strftime('%Y%m%d')}.csv",
+                    mime="text/csv",
+                    use_container_width=True
+                )
+                
+    except Exception as e:
+        st.error(f"Failed to load Stock Watchlist data: {e}")
+        import traceback
+        st.code(traceback.format_exc())
+        
+st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
