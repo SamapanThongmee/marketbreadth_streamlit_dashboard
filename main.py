@@ -972,15 +972,7 @@ with st.expander("📋 Stock Watchlist", expanded=True):
         if watchlist_df.empty:
             st.warning("No stock watchlist data available")
         else:
-            # Debug: Show actual column names
-            with st.expander("🔍 Debug: View actual column names"):
-                st.write("Actual columns in the data:")
-                st.write(watchlist_df.columns.tolist())
-                st.write("\nFirst few rows:")
-                st.dataframe(watchlist_df.head())
-            
             # Rename columns for better display
-            # First, let's create a mapping that handles various possible column names
             column_mapping = {}
             
             # Create mapping based on actual columns
@@ -1018,7 +1010,7 @@ with st.expander("📋 Stock Watchlist", expanded=True):
                     column_mapping[col] = 'ATRX'
                 elif col_upper in ['V TO 5D-AVG.V', 'V TO 5D AVG V']:
                     column_mapping[col] = 'V to 5d-Avg.V'
-                elif col_upper in ['MACD-V MOMENTUM', 'MACDV MOMENTUM', 'MACD V MOMENTUM', 'MACD-V Momentum']:
+                elif col_upper in ['MACD-V MOMENTUM', 'MACDV MOMENTUM', 'MACD V MOMENTUM']:
                     column_mapping[col] = 'MACD-V Momentum'
                 elif col_upper in ['TRENDADVISOR', 'TREND ADVISOR']:
                     column_mapping[col] = 'TRENDadvisor'
@@ -1093,7 +1085,7 @@ with st.expander("📋 Stock Watchlist", expanded=True):
             # Display the filtered table
             st.write(f"Showing **{len(filtered_df)}** stocks")
             
-            # Format numeric columns
+            # Format ONLY truly numeric columns (removed MACD-V Momentum since it's text)
             numeric_columns = [
                 'Relative Strength Ranking',
                 'Percentage close to previous 52-Week High',
@@ -1106,8 +1098,7 @@ with st.expander("📋 Stock Watchlist", expanded=True):
                 'MACD-V',
                 'MACD-VH',
                 'ATRX',
-                'V to 5d-Avg.V',
-                'MACD-V Momentum'
+                'V to 5d-Avg.V'
             ]
             
             # Convert numeric columns and format
