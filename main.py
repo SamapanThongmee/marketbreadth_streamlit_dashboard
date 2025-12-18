@@ -692,84 +692,160 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
     try:
         rrg_df = load_rrg_df(SHEET_ID, RRG_GID)
         
-        # Display basic info about RRG data
-        st.write(f"RRG Data: {len(rrg_df)} rows, {len(rrg_df.columns)} columns")
+        # Parse date column
+        rrg_df['Date'] = pd.to_datetime(rrg_df['Date'], errors='coerce')
+        rrg_df = rrg_df.dropna(subset=['Date']).sort_values('Date')
         
-        # Show column names for debugging
-        with st.expander("Debug: RRG Columns"):
-            st.write(rrg_df.columns.tolist())
-            st.write(rrg_df.head(10))
-        
-        # Basic RRG scatter plot
-        # Assuming columns: Symbol, RS-Ratio, RS-Momentum (adjust based on actual column names)
-        if len(rrg_df) > 0:
-            # Try to identify relevant columns
-            cols = rrg_df.columns.tolist()
+        if rrg_df.empty:
+            st.warning("No valid RRG data available")
+        else:
+            # Get latest date data
+            latest_date = rrg_df['Date'].max()
+            latest_data = rrg_df[rrg_df['Date'] == latest_date].iloc[0]
             
-            # Look for common RRG column patterns
-            symbol_col = None
-            ratio_col = None
-            momentum_col = None
+            st.write(f"Latest RRG Data: **{latest_date.date()}**")
             
-            for col in cols:
-                col_lower = str(col).lower()
-                if 'symbol' in col_lower or 'ticker' in col_lower or 'name' in col_lower:
-                    symbol_col = col
-                elif 'ratio' in col_lower or 'rs-ratio' in col_lower:
-                    ratio_col = col
-                elif 'momentum' in col_lower or 'rs-momentum' in col_lower:
-                    momentum_col = col
+            # Define sectors and their corresponding columns
+            sectors = {
+                'Consumer Discretionary': ('Consumer Discretionary JdK RS-Momentum', 'Consumer Discretionary JdK RS-Ratio'),
+                'Consumer Staples': ('Consumer Staples JdK RS-Momentum', 'Consumer Staples JdK RS-Ratio'),
+                'Health Care': ('Health Care JdK RS-Momentum', 'Health Care JdK RS-Ratio'),
+                'Industrials': ('Industrials JdK RS-Momentum', 'Industrials JdK RS-Ratio'),
+                'Information Technology': ('Information Technology JdK RS-Momentum', 'Information Technology JdK RS-Ratio'),
+                'Materials': ('Materials JdK RS-Momentum', 'Materials JdK RS-Ratio'),
+                'Real Estate': ('Real Estate JdK RS-Momentum', 'Real Estate JdK RS-Ratio'),
+                'Communication Services': ('Communication Services JdK RS-Momentum', 'Communication Services JdK RS-Ratio'),
+                'Utilities': ('Utilities JdK RS-Momentum', 'Utilities JdK RS-Ratio'),
+                'Financials': ('Financials JdK RS-Momentum', 'Financials JdK RS-Ratio'),
+                'Energy': ('Energy JdK RS-Momentum', 'Energy JdK RS-Ratio'),
+            }
             
-            if symbol_col and ratio_col and momentum_col:
+            # Prepare data for plotting
+            plot_data = []
+            for sector_name, (momentum_col, ratio_col) in sectors.items():
+                try:
+                    momentum = pd.to_numeric(latest_data[momentum_col], errors='coerce')
+                    ratio = pd.to_numeric(latest_data[ratio_col], errors='coerce')
+                    
+                    if pd.notna(momentum) and pd.notna(ratio):
+                        plot_data.append({
+                            'Sector': sector_name,
+                            'RS_Momentum': momentum,
+                            'RS_Ratio': ratio
+                        })
+                except Exception as e:
+                    st.warning(f"Could not parse {sector_name}: {e}")
+            
+            if plot_data:
+                plot_df = pd.DataFrame(plot_data)
+                
                 # Create RRG scatter plot
                 fig_rrg = go.Figure()
                 
-                # Filter latest data (assuming there's a date column)
-                rrg_plot = rrg_df.copy()
+                # Determine quadrant colors
+                colors = []
+                for _, row in plot_df.iterrows():
+                    if row['RS_Ratio'] >= 100 and row['RS_Momentum'] >= 100:
+                        colors.append('#00ff00')  # Leading - Green
+                    elif row['RS_Ratio'] < 100 and row['RS_Momentum'] >= 100:
+                        colors.append('#ffff00')  # Improving - Yellow
+                    elif row['RS_Ratio'] < 100 and row['RS_Momentum'] < 100:
+                        colors.append('#ff0000')  # Lagging - Red
+                    else:
+                        colors.append('#ff9800')  # Weakening - Orange
                 
-                # Add scatter plot
+                # Add scatter plot with colored markers
                 fig_rrg.add_trace(
                     go.Scatter(
-                        x=rrg_plot[ratio_col],
-                        y=rrg_plot[momentum_col],
+                        x=plot_df['RS_Ratio'],
+                        y=plot_df['RS_Momentum'],
                         mode='markers+text',
-                        marker=dict(size=10, color='#26a69a'),
-                        text=rrg_plot[symbol_col],
+                        marker=dict(
+                            size=15,
+                            color=colors,
+                            line=dict(width=2, color='white')
+                        ),
+                        text=plot_df['Sector'],
                         textposition='top center',
-                        name='Stocks'
+                        textfont=dict(size=10, color='white'),
+                        hovertemplate='<b>%{text}</b><br>' +
+                                     'RS-Ratio: %{x:.2f}<br>' +
+                                     'RS-Momentum: %{y:.2f}<br>' +
+                                     '<extra></extra>',
+                        name='Sectors'
                     )
                 )
                 
                 # Add quadrant lines at 100
-                fig_rrg.add_hline(y=100, line_dash="dash", line_color="gray", opacity=0.5)
-                fig_rrg.add_vline(x=100, line_dash="dash", line_color="gray", opacity=0.5)
+                fig_rrg.add_hline(y=100, line_dash="dash", line_color="gray", line_width=2, opacity=0.7)
+                fig_rrg.add_vline(x=100, line_dash="dash", line_color="gray", line_width=2, opacity=0.7)
+                
+                # Calculate reasonable axis ranges
+                x_min = min(plot_df['RS_Ratio'].min() - 5, 95)
+                x_max = max(plot_df['RS_Ratio'].max() + 5, 105)
+                y_min = min(plot_df['RS_Momentum'].min() - 5, 95)
+                y_max = max(plot_df['RS_Momentum'].max() + 5, 105)
+                
+                # Add quadrant background colors
+                fig_rrg.add_shape(type="rect", x0=100, y0=100, x1=x_max, y1=y_max,
+                                 fillcolor="green", opacity=0.1, layer="below", line_width=0)
+                fig_rrg.add_shape(type="rect", x0=x_min, y0=100, x1=100, y1=y_max,
+                                 fillcolor="yellow", opacity=0.1, layer="below", line_width=0)
+                fig_rrg.add_shape(type="rect", x0=x_min, y0=y_min, x1=100, y1=100,
+                                 fillcolor="red", opacity=0.1, layer="below", line_width=0)
+                fig_rrg.add_shape(type="rect", x0=100, y0=y_min, x1=x_max, y1=100,
+                                 fillcolor="orange", opacity=0.1, layer="below", line_width=0)
                 
                 # Add quadrant labels
-                fig_rrg.add_annotation(x=105, y=105, text="Leading", showarrow=False, font=dict(size=14, color="lightgreen"))
-                fig_rrg.add_annotation(x=95, y=105, text="Improving", showarrow=False,font=dict(size=14, color="yellow"))
-                fig_rrg.add_annotation(x=95, y=95, text="Lagging", showarrow=False,font=dict(size=14, color="red"))
-                fig_rrg.add_annotation(x=105, y=95, text="Weakening", showarrow=False,font=dict(size=14, color="orange"))
+                fig_rrg.add_annotation(x=x_max-2, y=y_max-2, text="Leading", showarrow=False,
+                                      font=dict(size=16, color="lightgreen", family="Arial Black"))
+                fig_rrg.add_annotation(x=x_min+2, y=y_max-2, text="Improving", showarrow=False,
+                                      font=dict(size=16, color="yellow", family="Arial Black"))
+                fig_rrg.add_annotation(x=x_min+2, y=y_min+2, text="Lagging", showarrow=False,
+                                      font=dict(size=16, color="red", family="Arial Black"))
+                fig_rrg.add_annotation(x=x_max-2, y=y_min+2, text="Weakening", showarrow=False,
+                                      font=dict(size=16, color="orange", family="Arial Black"))
                 
                 fig_rrg.update_layout(
-                    height=600,
+                    height=700,
                     template="plotly_dark",
                     xaxis_title="RS-Ratio",
                     yaxis_title="RS-Momentum",
+                    xaxis=dict(range=[x_min, x_max], zeroline=False),
+                    yaxis=dict(range=[y_min, y_max], zeroline=False),
                     hovermode="closest",
                     showlegend=False,
                     margin=dict(l=10, r=10, t=40, b=10),
                 )
                 
                 st.plotly_chart(fig_rrg, use_container_width=True, config={"displayModeBar": True})
+                
+                # Show data table
+                with st.expander("📊 Sector Data Table"):
+                    display_df = plot_df.copy()
+                    display_df['RS_Ratio'] = display_df['RS_Ratio'].round(2)
+                    display_df['RS_Momentum'] = display_df['RS_Momentum'].round(2)
+                    
+                    # Add quadrant column
+                    def get_quadrant(row):
+                        if row['RS_Ratio'] >= 100 and row['RS_Momentum'] >= 100:
+                            return 'Leading'
+                        elif row['RS_Ratio'] < 100 and row['RS_Momentum'] >= 100:
+                            return 'Improving'
+                        elif row['RS_Ratio'] < 100 and row['RS_Momentum'] < 100:
+                            return 'Lagging'
+                        else:
+                            return 'Weakening'
+                    
+                    display_df['Quadrant'] = display_df.apply(get_quadrant, axis=1)
+                    st.dataframe(display_df, use_container_width=True)
             else:
-                st.warning(f"Could not identify RRG columns. Found columns: {cols}")
-                st.write("Please specify the correct column names for Symbol, RS-Ratio, and RS-Momentum")
-        else:
-            st.warning("No RRG data available")
-            
+                st.warning("No valid sector data to plot")
+                
     except Exception as e:
         st.error(f"Failed to load RRG data: {e}")
-        st.info("Please check the Google Sheet permissions and GID")
+        import traceback
+        st.code(traceback.format_exc())
 
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
