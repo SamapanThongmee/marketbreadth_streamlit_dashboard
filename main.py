@@ -356,21 +356,21 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA20"], 
-                name="20-SMA",
+                name="Percentage of Members Above 20 Day Moving Average",
                 line=dict(width=1.5, color="#26a69a")
             ))
         if dff["MA50"].notna().any():
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA50"], 
-                name="50-SMA",
+                name="Percentage of Members Above 50 Day Moving Average",
                 line=dict(width=2, color="#ff9800")
             ))
         if dff["MA200"].notna().any():
             fig2.add_trace(go.Scatter(
                 x=dff["Date"], 
                 y=dff["MA200"], 
-                name="200-SMA",
+                name="Percentage of Members Above 200 Day Moving Average",
                 line=dict(width=2.5, color="#ef5350")
             ))
 
@@ -395,7 +395,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Scatter(
                     x=dff["Date"],
                     y=dff["PctAbove"],
-                    name="% Price > 50-SMA and 200-SMA",
+                    name="Percentage of Members Above 50-DMA and 200-DMA",
                     fill="tozeroy",
                     line=dict(width=1.5, color="#00ff00"),
                     fillcolor="rgba(0, 255, 0, 0.2)",
@@ -407,7 +407,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Scatter(
                     x=dff["Date"],
                     y=dff["PctBelow"],
-                    name="% Price < 50-SMA and 200-SMA",
+                    name="Percentage of Members Below 50-DMA and 200-DMA",
                     fill="tozeroy",
                     line=dict(width=1.5, color="#ff0000"),
                     fillcolor="rgba(255, 0, 0, 0.2)",
@@ -437,7 +437,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Bar(
                     x=dff["Date"],
                     y=dff["NH20"],
-                    name="% Price above New High 20 days",
+                    name="Percentage of Members with New 4 Week Highs",
                     marker_color="lightgreen",
                 )
             )
@@ -448,7 +448,7 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
                 go.Bar(
                     x=dff["Date"],
                     y=dff["NL20"] * -1,
-                    name="% Price below New Low 20 days",
+                    name="Percentage of Members with New 4 Week s",
                     marker_color="salmon",
                 )
             )
