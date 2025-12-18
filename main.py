@@ -252,7 +252,7 @@ with c2:
 
 # Set default values
 include_holidays = False
-disable_breaks = False
+disable_breaks = True
 
 # -------------------------
 # Load + Parse
