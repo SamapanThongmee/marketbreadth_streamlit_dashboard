@@ -125,11 +125,14 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
     # RSI columns
     col_rsi_over_70 = _pick_col(df, ["RSI_over_70", "RSIover70"])
     col_rsi_below_30 = _pick_col(df, ["RSI_below_30", "RSIbelow30"])
+    
+    # Advances-Declines Line
+    col_ad_line = _pick_col(df, ["Advances-Declines Line", "AdvancesDeclines", "AD_Line", "ADLine"])
 
     # positional fallback (A..S style)
     if not all([col_date, col_open, col_high, col_low, col_close]):
         def try_positional(offset: int = 0) -> dict:
-            if df.shape[1] < 49 + offset:  # Updated for more columns
+            if df.shape[1] < 49 + offset:
                 return {}
             cols = df.columns.tolist()
             return {
@@ -149,8 +152,9 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
                 "NL250": cols[28 + offset],
                 "McClellan_Oscillator": cols[9 + offset],
                 "McClellan_Summation_Index": cols[10 + offset],
-                "RSI_over_70": cols[47 + offset],  # Column AV (index 47)
-                "RSI_below_30": cols[48 + offset],  # Column AW (index 48)
+                "RSI_over_70": cols[47 + offset],
+                "RSI_below_30": cols[48 + offset],
+                "AD_Line": cols[8 + offset],  # Column I (index 8)
             }
 
         mapping = try_positional(0) or try_positional(1)
@@ -176,6 +180,7 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
             "McClellan_Summation_Index": df[mapping["McClellan_Summation_Index"]],
             "RSI_over_70": df[mapping["RSI_over_70"]],
             "RSI_below_30": df[mapping["RSI_below_30"]],
+            "AD_Line": df[mapping["AD_Line"]],
         })
     else:
         out = pd.DataFrame({
@@ -197,12 +202,13 @@ def _build_standard_df(raw: pd.DataFrame) -> pd.DataFrame:
             "McClellan_Summation_Index": df[col_mcclellan_sum] if col_mcclellan_sum else pd.NA,
             "RSI_over_70": df[col_rsi_over_70] if col_rsi_over_70 else pd.NA,
             "RSI_below_30": df[col_rsi_below_30] if col_rsi_below_30 else pd.NA,
+            "AD_Line": df[col_ad_line] if col_ad_line else pd.NA,
         })
 
     out["Date"] = _parse_date_series(out["Date"])
     out = out.dropna(subset=["Date"]).sort_values("Date")
 
-    for c in ["Open", "High", "Low", "Close", "MA20", "MA50", "MA200", "NH20", "NH250", "NL20", "NL250", "McClellan_Oscillator", "McClellan_Summation_Index", "RSI_over_70", "RSI_below_30"]:
+    for c in ["Open", "High", "Low", "Close", "MA20", "MA50", "MA200", "NH20", "NH250", "NL20", "NL250", "McClellan_Oscillator", "McClellan_Summation_Index", "RSI_over_70", "RSI_below_30", "AD_Line"]:
         out[c] = _clean_numeric_series(out[c])
 
     out["PctAbove"] = _normalize_percent(out["PctAbove"])
@@ -368,7 +374,7 @@ with st.expander("📈 S&P 500 Index", expanded=True):
 st.markdown("---")
 
 with st.expander("📊 Market Breadth Analysis", expanded=True):
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows", "📈 McClellan", "📊 Relative Strength Index"])
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["📊 Moving Averages", "📈 Double Moving Averages", "📊 New Highs & Lows", "📈 McClellan", "📊 Relative Strength Index", "📈 Advances-Declines Line"])
 
     with tab1:
         fig2 = go.Figure()
@@ -616,6 +622,34 @@ with st.expander("📊 Market Breadth Analysis", expanded=True):
             margin=dict(l=10, r=10, t=40, b=10),
         )
         st.plotly_chart(fig6, use_container_width=True, config={"displayModeBar": False})
-        
+
+
+    with tab6:
+        # Advances-Declines Line chart
+        fig7 = go.Figure()
+
+        if dff["AD_Line"].notna().any():
+            fig7.add_trace(
+                go.Scatter(
+                    x=dff["Date"],
+                    y=dff["AD_Line"],
+                    name="Advances-Declines Line",
+                    line=dict(width=2, color="#0000ff"),  # Blue
+                    mode='lines'
+                )
+            )
+
+        if rangebreaks:
+            fig7.update_xaxes(rangebreaks=rangebreaks)
+        fig7.update_layout(
+            height=400,
+            template="plotly_dark",
+            hovermode="x unified",
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            yaxis_title="Advances-Declines Line",
+            margin=dict(l=10, r=10, t=40, b=10),
+        )
+        st.plotly_chart(fig7, use_container_width=True, config={"displayModeBar": False})
+            
 st.markdown("---")
 st.caption(f"📊 Dashboard | {len(dff):,} points | {dff['Date'].min().date()} to {dff['Date'].max().date()}")
