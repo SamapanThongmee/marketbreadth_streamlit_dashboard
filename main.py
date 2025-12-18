@@ -704,8 +704,8 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
             num_points = min(50, len(available_dates))
             recent_dates = available_dates[-num_points:]
             
-            # Create slider for date selection
-            col1, col2 = st.columns([3, 1])
+            # Create slider for date selection and trail length
+            col1, col2, col3 = st.columns([2, 1, 1])
             
             with col1:
                 date_index = st.slider(
@@ -721,8 +721,23 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 selected_date = recent_dates[date_index]
                 st.metric("Selected Date", selected_date.strftime('%Y-%m-%d'))
             
+            with col3:
+                trail_length = st.slider(
+                    "Trail Length",
+                    min_value=1,
+                    max_value=20,
+                    value=10,
+                    step=1,
+                    key="trail_length"
+                )
+            
             # Get data for selected date
             selected_data = rrg_df[rrg_df['Date'] == selected_date].iloc[0]
+            
+            # Get historical data for trails (lookback from selected date)
+            trail_start_index = max(0, date_index - trail_length + 1)
+            trail_dates = recent_dates[trail_start_index:date_index + 1]
+            trail_df = rrg_df[rrg_df['Date'].isin(trail_dates)]
             
             # Define sectors and their corresponding columns
             sectors = {
@@ -737,6 +752,21 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 'Utilities': ('Utilities JdK RS-Momentum', 'Utilities JdK RS-Ratio'),
                 'Financials': ('Financials JdK RS-Momentum', 'Financials JdK RS-Ratio'),
                 'Energy': ('Energy JdK RS-Momentum', 'Energy JdK RS-Ratio'),
+            }
+            
+            # Sector colors
+            sector_colors = {
+                'Consumer Discretionary': '#e74c3c',
+                'Consumer Staples': '#3498db',
+                'Health Care': '#2ecc71',
+                'Industrials': '#f39c12',
+                'Information Technology': '#9b59b6',
+                'Materials': '#1abc9c',
+                'Real Estate': '#e67e22',
+                'Communication Services': '#34495e',
+                'Utilities': '#16a085',
+                'Financials': '#8e44ad',
+                'Energy': '#c0392b',
             }
             
             # Prepare data for plotting
@@ -761,67 +791,90 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 # Create RRG scatter plot
                 fig_rrg = go.Figure()
                 
-                # Determine quadrant colors for markers
-                colors = []
-                for _, row in plot_df.iterrows():
-                    if row['RS_Ratio'] >= 100 and row['RS_Momentum'] >= 100:
-                        colors.append('#2ecc71')  # Leading - Green
-                    elif row['RS_Ratio'] < 100 and row['RS_Momentum'] >= 100:
-                        colors.append('#3498db')  # Improving - Blue
-                    elif row['RS_Ratio'] < 100 and row['RS_Momentum'] < 100:
-                        colors.append('#e74c3c')  # Lagging - Red
-                    else:
-                        colors.append('#f39c12')  # Weakening - Orange
-                
-                # Add scatter plot with colored markers
-                fig_rrg.add_trace(
-                    go.Scatter(
-                        x=plot_df['RS_Ratio'],
-                        y=plot_df['RS_Momentum'],
-                        mode='markers+text',
-                        marker=dict(
-                            size=12,
-                            color=colors,
-                            line=dict(width=2, color='#34495e')
-                        ),
-                        text=plot_df['Sector'],
-                        textposition='top center',
-                        textfont=dict(size=9, color='#2c3e50'),
-                        hovertemplate='<b>%{text}</b><br>' +
-                                     'RS-Ratio: %{x:.2f}<br>' +
-                                     'RS-Momentum: %{y:.2f}<br>' +
-                                     '<extra></extra>',
-                        name='Sectors'
-                    )
-                )
-                
-                # Add quadrant lines at 100
-                fig_rrg.add_hline(y=100, line_dash="solid", line_color="#7f8c8d", line_width=2, opacity=0.8)
-                fig_rrg.add_vline(x=100, line_dash="solid", line_color="#7f8c8d", line_width=2, opacity=0.8)
-                
                 # Fixed axis ranges
                 x_min, x_max = 95, 105
                 y_min, y_max = 95, 105
                 
                 # Add quadrant background colors (lighter shades)
                 fig_rrg.add_shape(type="rect", x0=100, y0=100, x1=x_max, y1=y_max,
-                                 fillcolor="#d5f4e6", opacity=0.3, layer="below", line_width=0)  # Light green
+                                 fillcolor="#d5f4e6", opacity=0.3, layer="below", line_width=0)
                 fig_rrg.add_shape(type="rect", x0=x_min, y0=100, x1=100, y1=y_max,
-                                 fillcolor="#d6eaf8", opacity=0.3, layer="below", line_width=0)  # Light blue
+                                 fillcolor="#d6eaf8", opacity=0.3, layer="below", line_width=0)
                 fig_rrg.add_shape(type="rect", x0=x_min, y0=y_min, x1=100, y1=100,
-                                 fillcolor="#fadbd8", opacity=0.3, layer="below", line_width=0)  # Light red
+                                 fillcolor="#fadbd8", opacity=0.3, layer="below", line_width=0)
                 fig_rrg.add_shape(type="rect", x0=100, y0=y_min, x1=x_max, y1=100,
-                                 fillcolor="#fdeaa8", opacity=0.3, layer="below", line_width=0)  # Light orange/yellow
+                                 fillcolor="#fdeaa8", opacity=0.3, layer="below", line_width=0)
                 
-                # Add quadrant labels with darker text
+                # Add trails for each sector
+                for sector_name, (momentum_col, ratio_col) in sectors.items():
+                    trail_x = []
+                    trail_y = []
+                    
+                    for _, row in trail_df.iterrows():
+                        momentum = pd.to_numeric(row[momentum_col], errors='coerce')
+                        ratio = pd.to_numeric(row[ratio_col], errors='coerce')
+                        
+                        if pd.notna(momentum) and pd.notna(ratio):
+                            trail_x.append(ratio)
+                            trail_y.append(momentum)
+                    
+                    if len(trail_x) > 1:
+                        # Add trail line
+                        fig_rrg.add_trace(
+                            go.Scatter(
+                                x=trail_x,
+                                y=trail_y,
+                                mode='lines',
+                                line=dict(
+                                    width=2,
+                                    color=sector_colors.get(sector_name, '#95a5a6')
+                                ),
+                                opacity=0.5,
+                                showlegend=False,
+                                hoverinfo='skip'
+                            )
+                        )
+                
+                # Add quadrant lines at 100
+                fig_rrg.add_hline(y=100, line_dash="solid", line_color="#7f8c8d", line_width=2, opacity=0.8)
+                fig_rrg.add_vline(x=100, line_dash="solid", line_color="#7f8c8d", line_width=2, opacity=0.8)
+                
+                # Add current position markers on top
+                for _, row in plot_df.iterrows():
+                    sector_name = row['Sector']
+                    color = sector_colors.get(sector_name, '#95a5a6')
+                    
+                    fig_rrg.add_trace(
+                        go.Scatter(
+                            x=[row['RS_Ratio']],
+                            y=[row['RS_Momentum']],
+                            mode='markers+text',
+                            marker=dict(
+                                size=16,
+                                color=color,
+                                line=dict(width=3, color='white'),
+                                symbol='circle'
+                            ),
+                            text=sector_name,
+                            textposition='top center',
+                            textfont=dict(size=12, color='#2c3e50', family='Arial Black'),
+                            hovertemplate='<b>%{text}</b><br>' +
+                                         'RS-Ratio: %{x:.2f}<br>' +
+                                         'RS-Momentum: %{y:.2f}<br>' +
+                                         '<extra></extra>',
+                            showlegend=False
+                        )
+                    )
+                
+                # Add quadrant labels with larger font
                 fig_rrg.add_annotation(x=104, y=104, text="Leading", showarrow=False,
-                                      font=dict(size=18, color="#27ae60", family="Arial Black"))
+                                      font=dict(size=22, color="#27ae60", family="Arial Black"))
                 fig_rrg.add_annotation(x=96, y=104, text="Improving", showarrow=False,
-                                      font=dict(size=18, color="#2980b9", family="Arial Black"))
+                                      font=dict(size=22, color="#2980b9", family="Arial Black"))
                 fig_rrg.add_annotation(x=96, y=96, text="Lagging", showarrow=False,
-                                      font=dict(size=18, color="#c0392b", family="Arial Black"))
+                                      font=dict(size=22, color="#c0392b", family="Arial Black"))
                 fig_rrg.add_annotation(x=104, y=96, text="Weakening", showarrow=False,
-                                      font=dict(size=18, color="#d68910", family="Arial Black"))
+                                      font=dict(size=22, color="#d68910", family="Arial Black"))
                 
                 fig_rrg.update_layout(
                     height=700,
@@ -834,18 +887,20 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                         range=[x_min, x_max], 
                         zeroline=False,
                         gridcolor='#ecf0f1',
-                        title_font=dict(color='#2c3e50', size=14)
+                        title_font=dict(color='#2c3e50', size=16),
+                        tickfont=dict(size=12)
                     ),
                     yaxis=dict(
                         range=[y_min, y_max], 
                         zeroline=False,
                         gridcolor='#ecf0f1',
-                        title_font=dict(color='#2c3e50', size=14)
+                        title_font=dict(color='#2c3e50', size=16),
+                        tickfont=dict(size=12)
                     ),
                     hovermode="closest",
                     showlegend=False,
                     margin=dict(l=10, r=10, t=40, b=10),
-                    font=dict(color='#2c3e50')
+                    font=dict(color='#2c3e50', size=12)
                 )
                 
                 st.plotly_chart(fig_rrg, use_container_width=True, config={"displayModeBar": True})
