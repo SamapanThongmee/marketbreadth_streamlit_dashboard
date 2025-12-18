@@ -742,17 +742,17 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 # Create RRG scatter plot
                 fig_rrg = go.Figure()
                 
-                # Determine quadrant colors
+                # Determine quadrant colors for markers
                 colors = []
                 for _, row in plot_df.iterrows():
                     if row['RS_Ratio'] >= 100 and row['RS_Momentum'] >= 100:
-                        colors.append('#00ff00')  # Leading - Green
+                        colors.append('#2ecc71')  # Leading - Green
                     elif row['RS_Ratio'] < 100 and row['RS_Momentum'] >= 100:
-                        colors.append('#ffff00')  # Improving - Yellow
+                        colors.append('#3498db')  # Improving - Blue
                     elif row['RS_Ratio'] < 100 and row['RS_Momentum'] < 100:
-                        colors.append('#ff0000')  # Lagging - Red
+                        colors.append('#e74c3c')  # Lagging - Red
                     else:
-                        colors.append('#ff9800')  # Weakening - Orange
+                        colors.append('#f39c12')  # Weakening - Orange
                 
                 # Add scatter plot with colored markers
                 fig_rrg.add_trace(
@@ -761,13 +761,13 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                         y=plot_df['RS_Momentum'],
                         mode='markers+text',
                         marker=dict(
-                            size=15,
+                            size=12,
                             color=colors,
-                            line=dict(width=2, color='white')
+                            line=dict(width=2, color='#34495e')
                         ),
                         text=plot_df['Sector'],
                         textposition='top center',
-                        textfont=dict(size=10, color='white'),
+                        textfont=dict(size=9, color='#2c3e50'),
                         hovertemplate='<b>%{text}</b><br>' +
                                      'RS-Ratio: %{x:.2f}<br>' +
                                      'RS-Momentum: %{y:.2f}<br>' +
@@ -777,43 +777,56 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 )
                 
                 # Add quadrant lines at 100
-                fig_rrg.add_hline(y=100, line_dash="dash", line_color="gray", line_width=2, opacity=0.7)
-                fig_rrg.add_vline(x=100, line_dash="dash", line_color="gray", line_width=2, opacity=0.7)
+                fig_rrg.add_hline(y=100, line_dash="solid", line_color="#7f8c8d", line_width=2, opacity=0.8)
+                fig_rrg.add_vline(x=100, line_dash="solid", line_color="#7f8c8d", line_width=2, opacity=0.8)
                 
                 # Fixed axis ranges
                 x_min, x_max = 95, 105
                 y_min, y_max = 95, 105
                 
-                # Add quadrant background colors
+                # Add quadrant background colors (lighter shades)
                 fig_rrg.add_shape(type="rect", x0=100, y0=100, x1=x_max, y1=y_max,
-                                 fillcolor="green", opacity=0.1, layer="below", line_width=0)
+                                 fillcolor="#d5f4e6", opacity=0.3, layer="below", line_width=0)  # Light green
                 fig_rrg.add_shape(type="rect", x0=x_min, y0=100, x1=100, y1=y_max,
-                                 fillcolor="yellow", opacity=0.1, layer="below", line_width=0)
+                                 fillcolor="#d6eaf8", opacity=0.3, layer="below", line_width=0)  # Light blue
                 fig_rrg.add_shape(type="rect", x0=x_min, y0=y_min, x1=100, y1=100,
-                                 fillcolor="red", opacity=0.1, layer="below", line_width=0)
+                                 fillcolor="#fadbd8", opacity=0.3, layer="below", line_width=0)  # Light red
                 fig_rrg.add_shape(type="rect", x0=100, y0=y_min, x1=x_max, y1=100,
-                                 fillcolor="orange", opacity=0.1, layer="below", line_width=0)
+                                 fillcolor="#fdeaa8", opacity=0.3, layer="below", line_width=0)  # Light orange/yellow
                 
-                # Add quadrant labels
+                # Add quadrant labels with darker text
                 fig_rrg.add_annotation(x=104, y=104, text="Leading", showarrow=False,
-                                      font=dict(size=16, color="lightgreen", family="Arial Black"))
+                                      font=dict(size=18, color="#27ae60", family="Arial Black"))
                 fig_rrg.add_annotation(x=96, y=104, text="Improving", showarrow=False,
-                                      font=dict(size=16, color="yellow", family="Arial Black"))
+                                      font=dict(size=18, color="#2980b9", family="Arial Black"))
                 fig_rrg.add_annotation(x=96, y=96, text="Lagging", showarrow=False,
-                                      font=dict(size=16, color="red", family="Arial Black"))
+                                      font=dict(size=18, color="#c0392b", family="Arial Black"))
                 fig_rrg.add_annotation(x=104, y=96, text="Weakening", showarrow=False,
-                                      font=dict(size=16, color="orange", family="Arial Black"))
+                                      font=dict(size=18, color="#d68910", family="Arial Black"))
                 
                 fig_rrg.update_layout(
                     height=700,
-                    template="plotly_dark",
-                    xaxis_title="RS-Ratio",
-                    yaxis_title="RS-Momentum",
-                    xaxis=dict(range=[x_min, x_max], zeroline=False),
-                    yaxis=dict(range=[y_min, y_max], zeroline=False),
+                    template="plotly_white",  # Changed to white template
+                    plot_bgcolor='#f8f9fa',  # Light gray background
+                    paper_bgcolor='white',
+                    xaxis_title="JdK RS-Ratio",
+                    yaxis_title="JdK RS-Momentum",
+                    xaxis=dict(
+                        range=[x_min, x_max], 
+                        zeroline=False,
+                        gridcolor='#ecf0f1',
+                        title_font=dict(color='#2c3e50', size=14)
+                    ),
+                    yaxis=dict(
+                        range=[y_min, y_max], 
+                        zeroline=False,
+                        gridcolor='#ecf0f1',
+                        title_font=dict(color='#2c3e50', size=14)
+                    ),
                     hovermode="closest",
                     showlegend=False,
                     margin=dict(l=10, r=10, t=40, b=10),
+                    font=dict(color='#2c3e50')
                 )
                 
                 st.plotly_chart(fig_rrg, use_container_width=True, config={"displayModeBar": True})
