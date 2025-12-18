@@ -699,11 +699,30 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
         if rrg_df.empty:
             st.warning("No valid RRG data available")
         else:
-            # Get latest date data
-            latest_date = rrg_df['Date'].max()
-            latest_data = rrg_df[rrg_df['Date'] == latest_date].iloc[0]
+            # Get available dates (last 50 data points)
+            available_dates = rrg_df['Date'].unique()
+            num_points = min(50, len(available_dates))
+            recent_dates = available_dates[-num_points:]
             
-            st.write(f"Latest RRG Data: **{latest_date.date()}**")
+            # Create slider for date selection
+            col1, col2 = st.columns([3, 1])
+            
+            with col1:
+                date_index = st.slider(
+                    "Select Date (0 = oldest, {} = most recent)".format(num_points - 1),
+                    min_value=0,
+                    max_value=num_points - 1,
+                    value=num_points - 1,  # Default to most recent
+                    step=1,
+                    key="rrg_date_slider"
+                )
+            
+            with col2:
+                selected_date = recent_dates[date_index]
+                st.metric("Selected Date", selected_date.strftime('%Y-%m-%d'))
+            
+            # Get data for selected date
+            selected_data = rrg_df[rrg_df['Date'] == selected_date].iloc[0]
             
             # Define sectors and their corresponding columns
             sectors = {
@@ -724,8 +743,8 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
             plot_data = []
             for sector_name, (momentum_col, ratio_col) in sectors.items():
                 try:
-                    momentum = pd.to_numeric(latest_data[momentum_col], errors='coerce')
-                    ratio = pd.to_numeric(latest_data[ratio_col], errors='coerce')
+                    momentum = pd.to_numeric(selected_data[momentum_col], errors='coerce')
+                    ratio = pd.to_numeric(selected_data[ratio_col], errors='coerce')
                     
                     if pd.notna(momentum) and pd.notna(ratio):
                         plot_data.append({
@@ -806,8 +825,8 @@ with st.expander("📊 Relative Rotation Graph", expanded=True):
                 
                 fig_rrg.update_layout(
                     height=700,
-                    template="plotly_white",  # Changed to white template
-                    plot_bgcolor='#f8f9fa',  # Light gray background
+                    template="plotly_white",
+                    plot_bgcolor='#f8f9fa',
                     paper_bgcolor='white',
                     xaxis_title="JdK RS-Ratio",
                     yaxis_title="JdK RS-Momentum",
